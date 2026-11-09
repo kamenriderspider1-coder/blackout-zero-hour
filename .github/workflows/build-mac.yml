@@ -188,6 +188,13 @@ jobs:
           plutil -lint "$APP/Contents/Info.plist"
           test -s "$APP/Contents/Resources/BLACKOUT.icns"
 
+          # Apply a consistent ad-hoc signature to the complete app bundle and
+          # its embedded SDL2 framework after every binary/resource change.
+          # This prevents macOS from treating the bundle as internally damaged.
+          codesign --force --deep --sign - --timestamp=none "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          spctl --assess --type execute --verbose=2 "$APP" || true
+
       - name: Create and verify drag-and-drop DMG
         shell: bash
         run: |
