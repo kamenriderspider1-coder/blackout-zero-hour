@@ -71,7 +71,13 @@ int main(int argc,char **argv){
  renderer=SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
  if(!renderer)renderer=SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
  if(!renderer){SDL_DestroyWindow(window);SDL_Quit();return 3;}
+ Uint64 previous_counter=SDL_GetPerformanceCounter();
+ const double counter_frequency=(double)SDL_GetPerformanceFrequency();
  while(running){
+  Uint64 current_counter=SDL_GetPerformanceCounter();
+  float delta_time=(float)((current_counter-previous_counter)/counter_frequency);
+  previous_counter=current_counter;
+  if(delta_time>0.05f)delta_time=0.05f;
   SDL_Event e;while(SDL_PollEvent(&e)){
    if(e.type==SDL_QUIT)running=false;
    if(e.type==SDL_KEYDOWN){SDL_Keycode k=e.key.keysym.sym;
@@ -92,7 +98,7 @@ int main(int argc,char **argv){
     else if(screen==PLAY&&k==SDLK_e&&!scan){float dx=px-640,dy=py-200;if(dx*dx+dy*dy<15000)scan=1;}
    }
   }
-  if(screen==PLAY){const Uint8 *keys=SDL_GetKeyboardState(NULL);float v=3.0f;if(keys[SDL_SCANCODE_W]||keys[SDL_SCANCODE_UP])py-=v;if(keys[SDL_SCANCODE_S]||keys[SDL_SCANCODE_DOWN])py+=v;if(keys[SDL_SCANCODE_A]||keys[SDL_SCANCODE_LEFT])px-=v;if(keys[SDL_SCANCODE_D]||keys[SDL_SCANCODE_RIGHT])px+=v;if(px<120)px=120;if(px>1160)px=1160;if(py<150)py=150;if(py>610)py=610;}
+  if(screen==PLAY){const Uint8 *keys=SDL_GetKeyboardState(NULL);float v=180.0f*delta_time;if(keys[SDL_SCANCODE_W]||keys[SDL_SCANCODE_UP])py-=v;if(keys[SDL_SCANCODE_S]||keys[SDL_SCANCODE_DOWN])py+=v;if(keys[SDL_SCANCODE_A]||keys[SDL_SCANCODE_LEFT])px-=v;if(keys[SDL_SCANCODE_D]||keys[SDL_SCANCODE_RIGHT])px+=v;if(px<120)px=120;if(px>1160)px=1160;if(py<150)py=150;if(py>610)py=610;}
   color(7,12,18);SDL_RenderClear(renderer);draw();SDL_RenderPresent(renderer);SDL_Delay(1);
  }
  SDL_DestroyRenderer(renderer);SDL_DestroyWindow(window);SDL_Quit();return 0;
