@@ -1,0 +1,34 @@
+name: Build Switch Homebrew
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkita64:latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Build NRO
+        run: |
+          echo "DEVKITPRO=$DEVKITPRO"
+          make clean
+          make
+      - name: Verify output
+        run: |
+          test -f blackout-zero-hour.nro
+          ls -lh blackout-zero-hour.nro
+      - name: Upload NRO
+        uses: actions/upload-artifact@v4
+        with:
+          name: BLACKOUT-ZERO-HOUR-NRO
+          path: blackout-zero-hour.nro
+          if-no-files-found: error
+          retention-days: 14
