@@ -96,6 +96,31 @@ static void buildWorld(void){objectCount=0;
  // Floors and wall blocks form a true polygonal 3D level.
  for(int z=0;z<MAP_H;z++)for(int x=0;x<MAP_W;x++)if(mapData[z][x]=='#'&&objectCount<MAX_OBJECTS){objects[objectCount++]=(Object){x+.5f,1.0f,z+.5f,0.19f,0.34f,0.39f};}
 }
+
+static void drawRiderModel(M4 vp,V3 base,float scaleFactor,V3 armor,V3 accent){
+ // Stylized, fully 3D Rider-inspired suit assembled from lit mesh parts.
+ drawCube(vp,add(base,v3(0,1.48f*scaleFactor,0)),v3(.62f,.78f,.34f),armor);
+ drawCube(vp,add(base,v3(0,1.50f*scaleFactor,.19f)),v3(.32f,.30f,.075f),accent);
+ drawCube(vp,add(base,v3(0,1.05f*scaleFactor,0)),v3(.52f,.20f,.36f),accent);
+ drawCube(vp,add(base,v3(0,2.02f*scaleFactor,0)),v3(.48f,.48f,.42f),armor);
+ drawCube(vp,add(base,v3(0,2.05f*scaleFactor,.22f)),v3(.34f,.12f,.055f),accent);
+ drawCube(vp,add(base,v3(-.13f,2.05f*scaleFactor,.255f)),v3(.075f,.07f,.025f),v3(.95f,.95f,.65f));
+ drawCube(vp,add(base,v3(.13f,2.05f*scaleFactor,.255f)),v3(.075f,.07f,.025f),v3(.95f,.95f,.65f));
+ drawCube(vp,add(base,v3(-.43f,1.53f*scaleFactor,0)),v3(.28f,.70f,.30f),armor);
+ drawCube(vp,add(base,v3(.43f,1.53f*scaleFactor,0)),v3(.28f,.70f,.30f),armor);
+ drawCube(vp,add(base,v3(-.43f,1.15f*scaleFactor,.015f)),v3(.25f,.22f,.27f),accent);
+ drawCube(vp,add(base,v3(.43f,1.15f*scaleFactor,.015f)),v3(.25f,.22f,.27f),accent);
+ drawCube(vp,add(base,v3(-.17f,.63f*scaleFactor,0)),v3(.28f,.78f,.31f),armor);
+ drawCube(vp,add(base,v3(.17f,.63f*scaleFactor,0)),v3(.28f,.78f,.31f),armor);
+ drawCube(vp,add(base,v3(-.17f,.19f*scaleFactor,.08f)),v3(.32f,.20f,.46f),accent);
+ drawCube(vp,add(base,v3(.17f,.19f*scaleFactor,.08f)),v3(.32f,.20f,.46f),accent);
+}
+static void drawCrate(M4 vp,V3 p,float size){
+ drawCube(vp,p,v3(size,size,size),v3(.31f,.25f,.17f));
+ drawCube(vp,add(p,v3(0,0,size*.51f)),v3(size*.82f,size*.82f,.035f),v3(.48f,.38f,.24f));
+ drawCube(vp,add(p,v3(0,0,-size*.51f)),v3(size*.82f,size*.82f,.035f),v3(.48f,.38f,.24f));
+}
+
 static void render3D(void){
  glViewport(0,0,width,height);glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);glUseProgram(program);glBindVertexArray(vao);
  M4 proj=perspective(PI/2.8f,(float)width/(float)height,0.08f,80.0f);
@@ -104,9 +129,13 @@ static void render3D(void){
  glUniform3f(locLight,5.0f,8.0f,4.0f);
  drawCube(vp,v3(8,-.28f,8),v3(16,.5f,16),v3(.13f,.19f,.20f));
  for(int i=0;i<objectCount;i++)drawCube(vp,v3(objects[i].x,objects[i].y,objects[i].z),v3(1,2,1),v3(objects[i].r,objects[i].g,objects[i].b));
- // Structural columns and overhead crossbeams add depth and scale.
- for(int i=0;i<5;i++){float x=4.0f+i*2.0f;drawCube(vp,v3(x,2.8f,7.0f),v3(.22f,5.6f,.22f),v3(.22f,.31f,.34f));}
- for(int i=0;i<3;i++)if(!scanned[i]){drawCube(vp,v3(relays[i].x,0.85f,relays[i].z),v3(.42f,1.7f,.42f),v3(.08f,.85f,.78f));drawCube(vp,v3(relays[i].x,1.8f,relays[i].z),v3(.7f,.12f,.7f),v3(.55f,1.0f,.88f));}
+ // Structural columns, beams, lighting housings, and cover props.
+ for(int i=0;i<5;i++){float x=4.0f+i*2.0f;drawCube(vp,v3(x,2.8f,7.0f),v3(.22f,5.6f,.22f),v3(.22f,.31f,.34f));drawCube(vp,v3(x,5.55f,7.0f),v3(.55f,.16f,.55f),v3(.12f,.72f,.70f));}
+ drawCrate(vp,v3(5.5f,.55f,4.5f),1.0f);drawCrate(vp,v3(11.5f,.55f,8.5f),1.0f);drawCrate(vp,v3(6.5f,.55f,12.5f),1.0f);
+ // Relay stations now have a readable 3D housing, status band, and top beacon.
+ for(int i=0;i<3;i++)if(!scanned[i]){drawCube(vp,v3(relays[i].x,.85f,relays[i].z),v3(.72f,1.7f,.62f),v3(.08f,.26f,.30f));drawCube(vp,v3(relays[i].x,1.0f,relays[i].z+.33f),v3(.42f,.48f,.06f),v3(.08f,.85f,.78f));drawCube(vp,v3(relays[i].x,1.8f,relays[i].z),v3(.78f,.12f,.78f),v3(.55f,1.0f,.88f));}
+ // A suit display marks the extraction zone as a Rider operation.
+ if(found==3)drawRiderModel(vp,v3(13.5f,0,13.5f),.85f,v3(.10f,.22f,.30f),v3(.12f,.90f,.78f));
  if(found==3)drawCube(vp,v3(13.5f,1.0f,13.5f),v3(1.6f,2.0f,.25f),v3(.12f,.9f,.48f));
  // Simple crosshair, drawn as small unlit geometry near the camera.
  drawCube(vp,add(eye,mul(forward,1.2f)),v3(.018f,.18f,.018f),v3(.85f,1.0f,.95f));
