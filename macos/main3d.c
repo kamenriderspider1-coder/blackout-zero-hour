@@ -115,6 +115,37 @@ static void drawRiderModel(M4 vp,V3 base,float scaleFactor,V3 armor,V3 accent){
  drawCube(vp,add(base,v3(-.17f,.19f*scaleFactor,.08f)),v3(.32f,.20f,.46f),accent);
  drawCube(vp,add(base,v3(.17f,.19f*scaleFactor,.08f)),v3(.32f,.20f,.46f),accent);
 }
+
+static void drawZeroOneModel(M4 vp,V3 base,float k){
+ // Kamen Rider Zero-One: white/silver suit, red accents, green compound eyes.
+ V3 white=v3(.82f,.86f,.88f),silver=v3(.48f,.55f,.60f),red=v3(.82f,.08f,.12f);
+ V3 green=v3(.12f,.95f,.30f),black=v3(.035f,.045f,.055f),gold=v3(.95f,.68f,.12f);
+ #define ZP(x,y,z) add(base,v3((x)*k,(y)*k,(z)*k))
+ drawCube(vp,ZP(0,1.48f,0),v3(.66f*k,.78f*k,.38f*k),white);
+ drawCube(vp,ZP(0,1.48f,.205f),v3(.43f*k,.50f*k,.055f*k),silver);
+ drawCube(vp,ZP(0,1.02f,0),v3(.56f*k,.22f*k,.40f*k),black);
+ drawCube(vp,ZP(0,1.05f,.225f),v3(.28f*k,.25f*k,.07f*k),gold);
+ drawCube(vp,ZP(0,2.02f,0),v3(.50f*k,.48f*k,.43f*k),white);
+ drawCube(vp,ZP(0,2.02f,.225f),v3(.40f*k,.22f*k,.06f*k),black);
+ drawCube(vp,ZP(-.14f,2.02f,.27f),v3(.17f*k,.16f*k,.035f*k),green);
+ drawCube(vp,ZP(.14f,2.02f,.27f),v3(.17f*k,.16f*k,.035f*k),green);
+ drawCube(vp,ZP(-.25f,2.34f,.02f),v3(.09f*k,.40f*k,.09f*k),red);
+ drawCube(vp,ZP(.25f,2.34f,.02f),v3(.09f*k,.40f*k,.09f*k),red);
+ drawCube(vp,ZP(-.36f,2.45f,.02f),v3(.08f*k,.34f*k,.08f*k),gold);
+ drawCube(vp,ZP(.36f,2.45f,.02f),v3(.08f*k,.34f*k,.08f*k),gold);
+ drawCube(vp,ZP(-.44f,1.54f,0),v3(.27f*k,.69f*k,.31f*k),white);
+ drawCube(vp,ZP(.44f,1.54f,0),v3(.27f*k,.69f*k,.31f*k),white);
+ drawCube(vp,ZP(-.44f,1.15f,.02f),v3(.25f*k,.22f*k,.28f*k),red);
+ drawCube(vp,ZP(.44f,1.15f,.02f),v3(.25f*k,.22f*k,.28f*k),red);
+ drawCube(vp,ZP(-.17f,.62f,0),v3(.29f*k,.78f*k,.33f*k),white);
+ drawCube(vp,ZP(.17f,.62f,0),v3(.29f*k,.78f*k,.33f*k),white);
+ drawCube(vp,ZP(-.17f,.18f,.08f),v3(.33f*k,.20f*k,.45f*k),red);
+ drawCube(vp,ZP(.17f,.18f,.08f),v3(.33f*k,.20f*k,.45f*k),red);
+ drawCube(vp,ZP(-.17f,1.68f,.205f),v3(.09f*k,.46f*k,.035f*k),red);
+ drawCube(vp,ZP(.17f,1.68f,.205f),v3(.09f*k,.46f*k,.035f*k),red);
+ #undef ZP
+}
+
 static void drawCrate(M4 vp,V3 p,float size){
  drawCube(vp,p,v3(size,size,size),v3(.31f,.25f,.17f));
  drawCube(vp,add(p,v3(0,0,size*.51f)),v3(size*.82f,size*.82f,.035f),v3(.48f,.38f,.24f));
@@ -134,8 +165,8 @@ static void render3D(void){
  drawCrate(vp,v3(5.5f,.55f,4.5f),1.0f);drawCrate(vp,v3(11.5f,.55f,8.5f),1.0f);drawCrate(vp,v3(6.5f,.55f,12.5f),1.0f);
  // Relay stations now have a readable 3D housing, status band, and top beacon.
  for(int i=0;i<3;i++)if(!scanned[i]){drawCube(vp,v3(relays[i].x,.85f,relays[i].z),v3(.72f,1.7f,.62f),v3(.08f,.26f,.30f));drawCube(vp,v3(relays[i].x,1.0f,relays[i].z+.33f),v3(.42f,.48f,.06f),v3(.08f,.85f,.78f));drawCube(vp,v3(relays[i].x,1.8f,relays[i].z),v3(.78f,.12f,.78f),v3(.55f,1.0f,.88f));}
- // A suit display marks the extraction zone as a Rider operation.
- if(found==3)drawRiderModel(vp,v3(13.5f,0,13.5f),.85f,v3(.10f,.22f,.30f),v3(.12f,.90f,.78f));
+ // Kamen Rider Zero-One suit display marks the extraction zone.
+ if(found==3)drawZeroOneModel(vp,v3(13.5f,0,13.5f),.85f);
  if(found==3)drawCube(vp,v3(13.5f,1.0f,13.5f),v3(1.6f,2.0f,.25f),v3(.12f,.9f,.48f));
  // Simple crosshair, drawn as small unlit geometry near the camera.
  drawCube(vp,add(eye,mul(forward,1.2f)),v3(.018f,.18f,.018f),v3(.85f,1.0f,.95f));
