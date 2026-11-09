@@ -44,6 +44,22 @@ jobs:
           file "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
           otool -L "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
           ditto -c -k --sequesterRsrc --keepParent "dist/BLACKOUT ZERO HOUR.app" "BLACKOUT-ZERO-HOUR-macOS.zip"
+      - name: Create DMG installer
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p "dist/dmg"
+          ditto "dist/BLACKOUT ZERO HOUR.app" "dist/dmg/BLACKOUT ZERO HOUR.app"
+          ln -s /Applications "dist/dmg/Applications"
+          hdiutil create -volname "BLACKOUT ZERO HOUR" -srcfolder "dist/dmg" -ov -format UDZO "BLACKOUT-ZERO-HOUR-macOS.dmg"
+          hdiutil verify "BLACKOUT-ZERO-HOUR-macOS.dmg"
+      - name: Upload downloadable DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: BLACKOUT-ZERO-HOUR-macOS-DMG
+          path: BLACKOUT-ZERO-HOUR-macOS.dmg
+          if-no-files-found: error
+          retention-days: 30
       - name: Upload downloadable ZIP
         uses: actions/upload-artifact@v4
         with:
