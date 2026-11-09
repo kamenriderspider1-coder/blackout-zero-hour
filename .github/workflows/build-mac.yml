@@ -38,8 +38,21 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Install SDL2
-        run: brew install sdl2
+      - name: Build standalone SDL2
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDL_SOURCE="$RUNNER_TEMP/SDL2"
+          SDL_PREFIX="$RUNNER_TEMP/sdl2"
+          git clone --depth 1 --branch release-2.32.10 https://github.com/libsdl-org/SDL.git "$SDL_SOURCE"
+          cmake -S "$SDL_SOURCE" -B "$SDL_SOURCE/build" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$SDL_PREFIX" \
+            -DCMAKE_OSX_ARCHITECTURES="${{ matrix.arch }}" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET" \
+            -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TEST=OFF
+          cmake --build "$SDL_SOURCE/build" --config Release --parallel 3
+          cmake --install "$SDL_SOURCE/build"
 
       - name: Verify build environment
         shell: bash
@@ -47,10 +60,11 @@ jobs:
           set -euo pipefail
           echo "Runner architecture: $(uname -m)"
           echo "Requested architecture: ${{ matrix.arch }}"
-          echo "SDL2 prefix: $(brew --prefix sdl2)"
+          echo "Standalone SDL2 prefix: $RUNNER_TEMP/sdl2"
           test -f macos/main3d.c
           command -v clang
-          command -v sdl2-config
+          command -v cmake
+          test -f "$RUNNER_TEMP/sdl2/lib/libSDL2-2.0.0.dylib"
 
       - name: Compile native game and create app bundle
         shell: bash
@@ -60,7 +74,7 @@ jobs:
           APP="dist/BLACKOUT ZERO HOUR.app"
           APP_MACOS="$APP/Contents/MacOS"
           APP_FRAMEWORKS="$APP/Contents/Frameworks"
-          SDL_PREFIX="$(brew --prefix sdl2)"
+          SDL_PREFIX="$RUNNER_TEMP/sdl2"
           SDL_LIB="$SDL_PREFIX/lib/libSDL2-2.0.0.dylib"
           EXECUTABLE="$APP_MACOS/blackout-zero-hour"
 
@@ -71,9 +85,9 @@ jobs:
             -arch "${{ matrix.arch }}" \
             -mmacosx-version-min="$MACOSX_DEPLOYMENT_TARGET" \
             -O2 -Wall -Wextra \
-            $(sdl2-config --cflags) \
+            -I"$SDL_PREFIX/include/SDL2" \
             macos/main3d.c \
-            $(sdl2-config --libs) \
+            -L"$SDL_PREFIX/lib" -lSDL2 -Wl,-rpath,@executable_path/../Frameworks \
             -framework OpenGL \
             -lm \
             -o "$EXECUTABLE"
