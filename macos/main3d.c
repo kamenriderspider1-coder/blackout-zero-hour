@@ -204,6 +204,66 @@ static void render3D(void){
  drawCube(vp,add(eye,mul(forward,1.2f)),v3(.018f,.18f,.018f),v3(.85f,1.0f,.95f));
  glUseProgram(0);
 }
+
+static int menuPage=0;
+static int menuCursor=0;
+static void uiRect(M4 o,float x,float y,float w,float h,V3 c){drawCube(o,v3(x+w*.5f,y+h*.5f,0),v3(w,h,1),c);}
+static void uiBar(M4 o,float x,float y,float w,float h,float pct,V3 c){uiRect(o,x,y,w,h,v3(.035f,.055f,.075f));if(pct<0)pct=0;if(pct>1)pct=1;uiRect(o,x+2,y+2,(w-4)*pct,h-4,c);}
+static M4 uiProjection(void){M4 o=identity();o.m[0]=2.0f/(float)width;o.m[5]=-2.0f/(float)height;o.m[10]=-.01f;o.m[12]=-1;o.m[13]=1;return o;}
+static void renderInterface(void){
+ glDisable(GL_DEPTH_TEST);glUseProgram(program);M4 o=uiProjection();glUniform3f(locLight,0,10,0);
+ V3 cyan=v3(.05f,.82f,.82f),gold=v3(.98f,.72f,.10f),red=v3(.88f,.08f,.13f),dark=v3(.018f,.035f,.055f),panel=v3(.035f,.075f,.095f),white=v3(.78f,.88f,.90f);
+ if(!started){
+  uiRect(o,0,0,width,height,v3(.012f,.025f,.052f));
+  uiRect(o,width*.02f,height*.06f,width*.47f,height*.86f,v3(.025f,.075f,.105f));
+  uiRect(o,width*.02f,height*.06f,width*.47f,5,red);
+  uiRect(o,width*.53f,height*.06f,width*.45f,height*.86f,v3(.018f,.045f,.075f));
+  // Large angular Rider silhouette and luminous belt motif.
+  uiRect(o,width*.68f,height*.22f,width*.12f,height*.48f,v3(.035f,.11f,.15f));
+  uiRect(o,width*.70f,height*.55f,width*.08f,height*.10f,gold);
+  uiRect(o,width*.715f,height*.76f,width*.05f,height*.08f,red);
+  uiRect(o,width*.64f,height*.15f,width*.20f,4,cyan);
+  for(int i=0;i<5;i++){V3 c=(i==menuCursor)?red:panel;uiRect(o,width*.055f,height*(.72f-i*.105f),width*.34f,height*.065f,c);uiRect(o,width*.055f,height*(.72f-i*.105f),5,height*.065f,(i==menuCursor)?gold:cyan);}
+  uiRect(o,width*.055f,height*.12f,width*.34f,3,gold);
+  uiRect(o,width*.055f,height*.08f,width*.24f,4,cyan);
+  uiRect(o,width*.57f,height*.10f,width*.36f,height*.035f,dark);
+  uiRect(o,width*.57f,height*.10f,width*.18f,height*.035f,gold);
+ }else if(paused){
+  uiRect(o,width*.25f,height*.12f,width*.50f,height*.76f,dark);
+  uiRect(o,width*.25f,height*.12f,width*.50f,5,red);
+  for(int i=0;i<4;i++)uiRect(o,width*.32f,height*(.67f-i*.13f),width*.36f,height*.075f,i==menuCursor?red:panel);
+  uiRect(o,width*.32f,height*.17f,width*.36f,3,cyan);
+ }else{
+  // Tactical minimap frame and radar sweep markers.
+  uiRect(o,width*.025f,height*.69f,width*.16f,height*.25f,dark);
+  uiRect(o,width*.025f,height*.69f,width*.16f,3,cyan);
+  uiRect(o,width*.035f,height*.71f,width*.14f,height*.21f,v3(.06f,.13f,.15f));
+  for(int i=0;i<8;i++)uiRect(o,width*(.045f+(i%4)*.032f),height*(.73f+(i/4)*.075f),width*.008f,3,(i%3)==0?red:cyan);
+  // Mission/objective card.
+  uiRect(o,width*.205f,height*.79f,width*.26f,height*.14f,dark);
+  uiRect(o,width*.205f,height*.79f,width*.26f,3,gold);
+  uiBar(o,width*.22f,height*.815f,width*.22f,8,(float)found/3.0f,cyan);
+  // Rider status portrait block, health and energy.
+  uiRect(o,width*.025f,height*.035f,width*.23f,height*.14f,dark);
+  uiRect(o,width*.025f,height*.035f,4,height*.14f,gold);
+  uiBar(o,width*.105f,height*.075f,width*.13f,10,1.0f,red);
+  uiBar(o,width*.105f,height*.055f,width*.13f,8,.72f,cyan);
+  // Ability tiles.
+  for(int i=0;i<4;i++){float x=width*(.025f+i*.085f);uiRect(o,x,height*.19f,width*.072f,height*.085f,dark);uiRect(o,x,height*.19f,width*.072f,3,i==3?gold:cyan);uiRect(o,x+width*.022f,height*.215f,width*.028f,height*.04f,i==3?gold:panel);}
+  // Ammo and weapon card.
+  uiRect(o,width*.77f,height*.035f,width*.205f,height*.14f,dark);
+  uiRect(o,width*.77f,height*.035f,width*.205f,3,cyan);
+  for(int i=0;i<12;i++)uiRect(o,width*(.79f+i*.010f),height*.075f,width*.006f,12,i<ammo?gold:panel);
+  // Compass ticks.
+  uiRect(o,width*.36f,height*.955f,width*.28f,2,white);
+  for(int i=0;i<13;i++)uiRect(o,width*(.37f+i*.021f),height*.945f,1,(i%3)==0?12:6,white);
+  // Crosshair and hit-ready reticle.
+  uiRect(o,width*.495f,height*.50f,width*.010f,2,white);
+  uiRect(o,width*.499f,height*.49f,2,height*.02f,white);
+ }
+ glEnable(GL_DEPTH_TEST);
+}
+
 static void updateTitle(void){char t[256];snprintf(t,sizeof(t),"BLACKOUT: ZERO HOUR | F1 Controls | %s sticks | Y %s | Sensitivity %d | Deadzone %d",swapSticks?"Swapped":"Default",invertLookY?"Inverted":"Normal",sensitivityLevel+1,deadzoneLevel+1);SDL_SetWindowTitle(window,t);}
 static void saveControls(void){if(!settingsPath[0])return;FILE*f=fopen(settingsPath,"w");if(f){fprintf(f,"%d %d %d %d\\n",invertLookY,swapSticks,sensitivityLevel,deadzoneLevel);fclose(f);}}
 static void loadControls(void){char*base=SDL_GetPrefPath("BlackoutZeroHour","BLACKOUT ZERO HOUR");if(base){snprintf(settingsPath,sizeof(settingsPath),"%scontrols.cfg",base);SDL_free(base);}FILE*f=fopen(settingsPath,"r");if(f){int a,b,c,d;if(fscanf(f,"%d %d %d %d",&a,&b,&c,&d)==4){invertLookY=a!=0;swapSticks=b!=0;sensitivityLevel=c<0?0:(c>3?3:c);deadzoneLevel=d<0?0:(d>2?2:d);}fclose(f);}updateTitle();}
@@ -228,15 +288,15 @@ int main(int argc,char **argv){(void)argc;(void)argv;
     else if(k==SDLK_f&&started&&!paused)reloadWeapon();
     else if(k==SDLK_F1){controlsMenu=!controlsMenu;paused=controlsMenu;SDL_SetRelativeMouseMode(controller?SDL_FALSE:(started&&!paused?SDL_TRUE:SDL_FALSE));}
     else if(controlsMenu&&(k==SDLK_1||k==SDLK_2||k==SDLK_3||k==SDLK_4)){if(k==SDLK_1)invertLookY=!invertLookY;if(k==SDLK_2)swapSticks=!swapSticks;if(k==SDLK_3)sensitivityLevel=(sensitivityLevel+1)%4;if(k==SDLK_4)deadzoneLevel=(deadzoneLevel+1)%3;saveControls();updateTitle();}
-    else if(k==SDLK_ESCAPE){if(controlsMenu){controlsMenu=false;paused=false;}else paused=!paused;SDL_SetRelativeMouseMode(controller?SDL_FALSE:(started&&!paused?SDL_TRUE:SDL_FALSE));}
-    if(!started&&k==SDLK_RETURN)resetGame();else if(started&&paused&&!controlsMenu&&k==SDLK_RETURN){paused=false;SDL_SetRelativeMouseMode(controller?SDL_FALSE:SDL_TRUE);}else if(started&&!paused&&k==SDLK_e&&!gameComplete){if(found<3){for(int i=0;i<3;i++){float dx=px-relays[i].x,dz=pz-relays[i].z;if(!scanned[i]&&dx*dx+dz*dz<2.2f){scanned[i]=true;found++;}}}else{float dx=px-13.5f,dz=pz-13.5f;if(dx*dx+dz*dz<3.0f){gameComplete=true;paused=true;SDL_SetWindowTitle(window,"BLACKOUT: ZERO HOUR | MISSION COMPLETE | Press R to replay");}}}}
+    else if(k==SDLK_ESCAPE){if(!started&&menuPage){menuPage=0;menuCursor=0;SDL_SetWindowTitle(window,"BLACKOUT: ZERO HOUR | UP/DOWN select | ENTER confirm");}else if(controlsMenu){controlsMenu=false;paused=false;}else paused=!paused;SDL_SetRelativeMouseMode(controller?SDL_FALSE:(started&&!paused?SDL_TRUE:SDL_FALSE));}
+    if(!started&&k==SDLK_UP){menuCursor=(menuCursor+4)%5;}else if(!started&&k==SDLK_DOWN){menuCursor=(menuCursor+1)%5;}else if(!started&&k==SDLK_RETURN){if(menuCursor==0)resetGame();else {menuPage=menuCursor;char mt[160];const char*pages[]={"","CHARACTER SELECT | Rider roster preview","GUNS SHOP | Weapon catalog preview","WEAPON CUSTOMIZATION | Attachment bench preview","SETTINGS | Controls and display"};snprintf(mt,sizeof(mt),"BLACKOUT: ZERO HOUR | %s | ESC back",pages[menuCursor]);SDL_SetWindowTitle(window,mt);}}else if(started&&paused&&!controlsMenu&&k==SDLK_RETURN){paused=false;SDL_SetRelativeMouseMode(controller?SDL_FALSE:SDL_TRUE);}else if(started&&!paused&&k==SDLK_e&&!gameComplete){if(found<3){for(int i=0;i<3;i++){float dx=px-relays[i].x,dz=pz-relays[i].z;if(!scanned[i]&&dx*dx+dz*dz<2.2f){scanned[i]=true;found++;}}}else{float dx=px-13.5f,dz=pz-13.5f;if(dx*dx+dz*dz<3.0f){gameComplete=true;paused=true;SDL_SetWindowTitle(window,"BLACKOUT: ZERO HOUR | MISSION COMPLETE | Press R to replay");}}}}
    if(e.type==SDL_CONTROLLERBUTTONDOWN&&controller){if(e.cbutton.button==SDL_CONTROLLER_BUTTON_Y){resetGame();}else if(controlsMenu){if(e.cbutton.button==SDL_CONTROLLER_BUTTON_A){sensitivityLevel=(sensitivityLevel+1)%4;saveControls();updateTitle();}if(e.cbutton.button==SDL_CONTROLLER_BUTTON_B){controlsMenu=false;paused=false;}}else if(e.cbutton.button==SDL_CONTROLLER_BUTTON_START)paused=!paused;else if(started&&!paused&&e.cbutton.button==SDL_CONTROLLER_BUTTON_A&&!gameComplete){if(found<3){for(int i=0;i<3;i++){float dx=px-relays[i].x,dz=pz-relays[i].z;if(!scanned[i]&&dx*dx+dz*dz<2.2f){scanned[i]=true;found++;}}}else{float dx=px-13.5f,dz=pz-13.5f;if(dx*dx+dz*dz<3.0f){gameComplete=true;paused=true;SDL_SetWindowTitle(window,"BLACKOUT: ZERO HOUR | MISSION COMPLETE | Press R to replay");}}}}
   }
   if(started&&!paused&&!gameComplete){const Uint8*k=SDL_GetKeyboardState(NULL);float fx=cosf(yaw),fz=sinf(yaw),rx=-fz,rz=fx,mx=0,mz=0;if(k[SDL_SCANCODE_W]||k[SDL_SCANCODE_UP]){mx+=fx;mz+=fz;}if(k[SDL_SCANCODE_S]||k[SDL_SCANCODE_DOWN]){mx-=fx;mz-=fz;}if(k[SDL_SCANCODE_A]){mx+=rx;mz+=rz;}if(k[SDL_SCANCODE_D]){mx-=rx;mz-=rz;}
     if(controller){SDL_GameControllerAxis moveX=swapSticks?SDL_CONTROLLER_AXIS_RIGHTX:SDL_CONTROLLER_AXIS_LEFTX,moveY=swapSticks?SDL_CONTROLLER_AXIS_RIGHTY:SDL_CONTROLLER_AXIS_LEFTY,aimX=swapSticks?SDL_CONTROLLER_AXIS_LEFTX:SDL_CONTROLLER_AXIS_RIGHTX,aimY=swapSticks?SDL_CONTROLLER_AXIS_LEFTY:SDL_CONTROLLER_AXIS_RIGHTY;float lx=getAxis(moveX),ly=getAxis(moveY);mx+=fx*(-ly)+rx*lx;mz+=fz*(-ly)+rz*lx;yaw+=getAxis(aimX)*2.4f*dt*(sensitivities[sensitivityLevel]/0.0022f);pitch+=getAxis(aimY)*2.0f*dt*(sensitivities[sensitivityLevel]/0.0022f)*(invertLookY?1.0f:-1.0f);}
     float l=sqrtf(mx*mx+mz*mz);if(l>1){mx/=l;mz/=l;}if(l>0){float speed=k[SDL_SCANCODE_LSHIFT]?4.4f:3.0f;mx*=speed*dt;mz*=speed*dt;if(!wall(px+mx,pz))px+=mx;if(!wall(px,pz+mz))pz+=mz;}if(k[SDL_SCANCODE_LEFT])yaw-=1.8f*dt;if(k[SDL_SCANCODE_RIGHT])yaw+=1.8f*dt;if(pitch>1.25f)pitch=1.25f;if(pitch< -1.25f)pitch=-1.25f;}
   render3D();
-  if(!started||paused||found==3){glDisable(GL_DEPTH_TEST);glUseProgram(program);M4 ortho=identity();ortho.m[0]=2.0f/(float)width;ortho.m[5]=-2.0f/(float)height;ortho.m[10]=-.01f;ortho.m[12]=-1;ortho.m[13]=1;glUniform3f(locLight,0,10,0);if(!started){drawCube(ortho,v3(width*.5f,height*.28f,0),v3(440,55,1),v3(.04f,.48f,.48f));drawCube(ortho,v3(width*.5f,height*.48f,0),v3(570,18,1),v3(.75f,.9f,.88f));}else if(paused){drawCube(ortho,v3(width*.5f,height*.42f,0),v3(300,45,1),v3(.15f,.5f,.5f));}else{drawCube(ortho,v3(width*.5f,height*.42f,0),v3(360,50,1),v3(.12f,.8f,.42f));}glEnable(GL_DEPTH_TEST);}
+  renderInterface();
   if(started&&!gameComplete){char title[256];if(paused)snprintf(title,sizeof(title),"BLACKOUT: ZERO HOUR | PAUSED | ESC resume | R restart");else if(found<3){int near=-1;float best=2.2f;for(int i=0;i<3;i++){float dx=px-relays[i].x,dz=pz-relays[i].z,d=dx*dx+dz*dz;if(!scanned[i]&&d<best){best=d;near=i;}}snprintf(title,sizeof(title),"ZERO-ONE | Relays %d/3 | Drones %d/4 | Ammo %d/%d | Score %d | %s | E interact | Click fire | F reload",found,(enemies[0].active+enemies[1].active+enemies[2].active+enemies[3].active),ammo,reserveAmmo,score,near>=0?"Relay in range":"Explore facility");}else{float dx=px-13.5f,dz=pz-13.5f;snprintf(title,sizeof(title),"ZERO-ONE | All relays secured | Extraction %s | E extract",dx*dx+dz*dz<3.0f?"in range":"at far end");}SDL_SetWindowTitle(window,title);}SDL_GL_SwapWindow(window);SDL_Delay(1);
  }
  SDL_SetRelativeMouseMode(SDL_FALSE);if(controller)SDL_GameControllerClose(controller);glDeleteBuffers(1,&vbo);glDeleteVertexArrays(1,&vao);glDeleteProgram(program);SDL_GL_DeleteContext(context);SDL_DestroyWindow(window);SDL_Quit();return 0;
