@@ -21,10 +21,9 @@ static Framebuffer g_framebuffer;
 static Cam cam = {0.0f,0.0f,0.0f};
 static float yaw = 0.0f;
 static int screen = 0;
-static int weapon = 0;
-static int attachment = 0;
-static bool equipped[3] = {true,false,false};
+static int operator_id = 0;
 static int mission_time = 0;
+static bool beacon_found = false;
 
 static V3 v3(float x,float y,float z){ return (V3){x,y,z}; }
 static V3 sub(V3 a,V3 b){ return v3(a.x-b.x,a.y-b.y,a.z-b.z); }
@@ -124,7 +123,7 @@ static void scene(void){
  cube(1.4f,0,6,0.5f,1.0f,0.5f,rgb(110,76,46));
  cube(-2.0f,0,12,0.5f,0.9f,0.5f,rgb(110,76,46));
 }
-static void weapon_model(void){
+static void scanner_model(void){
  float x=0.48f,y=-0.47f,z=1.25f;
  uint32_t metal=rgb(30,37,43),edge=rgb(83,97,105),accent=rgb(20,111,121);
  quad(v3(x,y,z),v3(x+0.20f,y,z),v3(x+0.20f,y+0.14f,z),v3(x,y+0.14f,z),metal);
@@ -136,7 +135,7 @@ static void weapon_model(void){
 }
 static void draw_world(void){
  size_t n=(size_t)W*H;for(size_t i=0;i<n;i++)zbuf[i]=0.0f;
- scene();weapon_model();
+ scene();scanner_model();
  rect((int)W/2-13,(int)H/2-1,26,2,rgb(220,231,224));
  rect((int)W/2-1,(int)H/2-13,2,26,rgb(220,231,224));
  rect(0,0,W,58,rgb(8,13,19));
@@ -153,48 +152,44 @@ static void panel(void){
  text(65,65,"BLACKOUT ZERO HOUR",rgb(87,214,218));
  if(screen==0){
   text(65,130,"TACTICAL OPERATIONS",rgb(230,235,233));
-  text(65,190,"A  DEPLOY  /  CAMPAIGN",rgb(230,235,233));
-  text(65,230,"X  OPERATOR LOADOUT",rgb(190,203,207));
-  text(65,270,"Y  GUNSMITH",rgb(190,203,207));
+  text(65,190,"A  BEGIN OPERATION NIGHTFALL",rgb(230,235,233));
+  text(65,230,"X  SELECT EXPLORER",rgb(190,203,207));
+  text(65,270,"Y  FIELD BRIEFING",rgb(190,203,207));
   text(65,310,"PLUS  EXIT",rgb(190,203,207));
-  text(65,390,"3D FIRST PERSON PROTOTYPE",rgb(87,214,218));
+  text(65,390,"3D EXPLORATION / RESCUE PROTOTYPE",rgb(87,214,218));
  } else if(screen==1){
-  text(65,130,"OPERATOR LOADOUT",rgb(230,235,233));
-  text(65,190,weapon==0?"> VX-9 RIFLE": "  VX-9 RIFLE",rgb(230,235,233));
-  text(65,230,weapon==1?"> KITE SMG":"  KITE SMG",rgb(230,235,233));
-  text(65,270,weapon==2?"> ORBIT DMR":"  ORBIT DMR",rgb(230,235,233));
-  text(65,350,"LEFT / RIGHT SELECT   A EQUIP   B BACK",rgb(87,214,218));
-  cube(-0.5f,-0.2f,3.0f,1.0f,0.5f,1.5f,rgb(62,78,86));
+  text(65,130,"SELECT EXPLORER",rgb(230,235,233));
+  text(65,190,operator_id==0?"> FIELD TECH":"  FIELD TECH",rgb(230,235,233));
+  text(65,230,operator_id==1?"> RESCUE SPECIALIST":"  RESCUE SPECIALIST",rgb(230,235,233));
+  text(65,290,"LEFT / RIGHT SELECT   A CONFIRM   B BACK",rgb(87,214,218));
+  cube(-0.5f,-0.2f,3.0f,1.0f,1.8f,0.5f,rgb(62,92,86));
  } else if(screen==2){
-  text(65,130,"GUNSMITH / ATTACHMENT BENCH",rgb(230,235,233));
-  text(65,190,attachment==0?"> HOLOGRAPHIC OPTIC":"  HOLOGRAPHIC OPTIC",rgb(230,235,233));
-  text(65,230,attachment==1?"> STABILIZED BARREL":"  STABILIZED BARREL",rgb(230,235,233));
-  text(65,270,attachment==2?"> CONTROL GRIP":"  CONTROL GRIP",rgb(230,235,233));
-  text(65,350,"UP / DOWN SLOT   A TOGGLE   B BACK",rgb(87,214,218));
-  text(65,400,"ATTACHMENTS ARE FICTIONAL GAME COSMETICS",rgb(140,157,164));
+  text(65,130,"FIELD BRIEFING",rgb(230,235,233));
+  text(65,190,"A STORM HAS DISABLED THE RELAY STATION.",rgb(210,220,220));
+  text(65,230,"FIND THE SIGNAL BEACON IN THE RUINED YARD.",rgb(210,220,220));
+  text(65,270,"SCAN IT, THEN RETURN TO THE START POINT.",rgb(210,220,220));
+  text(65,350,"A BEGIN   B BACK",rgb(87,214,218));
  }
 }
 int main(void){
- viInit(ViServiceType_Default);
+ if (R_FAILED(viInitialize(ViServiceType_Default))) return 1;
  W=1280;H=720;
- framebufferCreate(&g_framebuffer,nwindowGetDefault(),W,H,PIXEL_FORMAT_RGBA_8888,2);
- fb=(uint32_t*)framebufferAcquire(&g_framebuffer,&STRIDE);
- STRIDE/=sizeof(uint32_t);
+ if (R_FAILED(framebufferCreate(&g_framebuffer,nwindowGetDefault(),W,H,PIXEL_FORMAT_RGBA_8888,2))) { viExit(); return 1; }
+ if (R_FAILED(framebufferMakeLinear(&g_framebuffer))) { framebufferClose(&g_framebuffer); viExit(); return 1; }
  zbuf=(float*)malloc((size_t)W*H*sizeof(float));
- if(!fb||!zbuf){framebufferClose(&g_framebuffer);viExit();return 1;}
- padConfigureInput(1,HidNpadStyleSet_NpadFullKey);
+ if(!zbuf){framebufferClose(&g_framebuffer);viExit();return 1;}
+ padConfigureInput(1,HidNpadStyleSet_NpadStandard);
  PadState pad;padInitializeDefault(&pad);
  while(appletMainLoop()){
   padUpdate(&pad);u64 down=padGetButtonsDown(&pad);
   HidAnalogStickState left=padGetStickPos(&pad,0),right=padGetStickPos(&pad,1);
   if(down&HidNpadButton_Plus)break;
   if(screen==0){
-   if(down&HidNpadButton_A)screen=3;
+   if(down&HidNpadButton_A){screen=3;beacon_found=false;cam=(Cam){0,0,0};yaw=0;}
    if(down&HidNpadButton_X)screen=1;
    if(down&HidNpadButton_Y)screen=2;
   }else if(screen==1){
-   if(down&HidNpadButton_Left)weapon=(weapon+2)%3;
-   if(down&HidNpadButton_Right)weapon=(weapon+1)%3;
+   if(down&HidNpadButton_Left||down&HidNpadButton_Right)operator_id=1-operator_id;
    if(down&HidNpadButton_A)screen=0;
    if(down&HidNpadButton_B)screen=0;
   }else if(screen==2){
@@ -203,6 +198,7 @@ int main(void){
    if(down&HidNpadButton_A)equipped[attachment]=!equipped[attachment];
    if(down&HidNpadButton_B)screen=0;
   }else{
+   if(down&HidNpadButton_A && cam.z>10.0f && cam.z<18.0f && fabsf(cam.x)<4.0f)beacon_found=true;
    if(down&HidNpadButton_B)screen=0;
    float forward=(float)left.y/32768.0f*0.11f;
    float strafe=(float)left.x/32768.0f*0.10f;
@@ -215,7 +211,7 @@ int main(void){
    if(down&HidNpadButton_Right){cam.x+=cosf(yaw)*0.18f;cam.z-=sinf(yaw)*0.18f;}
    mission_time++;
   }
-  fb=(uint32_t*)framebufferAcquire(&g_framebuffer,&STRIDE);
+  fb=(uint32_t*)framebufferBegin(&g_framebuffer,&STRIDE);
   STRIDE/=sizeof(uint32_t);
   if(screen==3)draw_world();else panel();
   framebufferEnd(&g_framebuffer);
