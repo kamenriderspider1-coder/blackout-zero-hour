@@ -19,7 +19,7 @@ CFLAGS += $(INCLUDE) -D__SWITCH__
 CXXFLAGS := $(CFLAGS) -fno-rtti -fno-exceptions
 ASFLAGS := -g $(ARCH)
 LDFLAGS = -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
-LIBS := -lnx
+LIBS := -lnx -lm
 LIBDIRS := $(PORTLIBS) $(LIBNX)
 
 ifneq ($(BUILD),$(notdir $(CURDIR)))
