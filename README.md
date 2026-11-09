@@ -12,7 +12,7 @@ The goal is a cinematic, mission-based shooter with responsive first-person cont
 - **Campaign:** Five connected missions with varied locations, objectives, checkpoints, save progression, dialogue, and cinematic moments.
 - **Player systems:** First-person mouse look, responsive movement, sprinting, aiming, reloading, health, ammunition, and weapon switching.
 - **Combat systems:** Hostile AI with distinct behaviors, cover-aware movement, hit feedback, encounter pacing, and mission-based enemy waves.
-- **Co-op goal:** Four-player local split-screen and up-to-eight-player online co-op, developed after the single-player FPS foundation is stable.
+- **Multiplayer goal:** Online-only multiplayer, targeting up to eight players. No local multiplayer, couch co-op, or split-screen mode. Players use separate devices and connect over the internet.
 
 ## Current implementation status
 
@@ -20,7 +20,7 @@ The current native prototype in `macos/main3d.c` is an early playable 3D mission
 
 **Current playable objective:** Explore the facility, activate three relay stations, then reach the extraction area. The window title reports relay progress and whether the player is near an objective. The controller's A button can interact with relays and extraction.
 
-**Important:** This is still an early prototype, not the completed FPS described above. It does not yet include player weapons, shooting, aiming, reloading, enemy AI, damage/health, a combat HUD, animated character rigs, a multi-mission campaign, cutscenes, or multiplayer. The Zero-One model is currently assembled from simple 3D shapes and is displayed at the extraction area, not yet a selectable playable character. These are development targets, not completed features.
+**Important:** This is still an early prototype, not the completed FPS described above. It does not yet include player weapons, shooting, aiming, reloading, enemy AI, damage/health, a combat HUD, animated character rigs, a multi-mission campaign, cutscenes, or multiplayer. Online multiplayer is a planned feature only; no networking or matchmaking is implemented yet. The Zero-One model is currently assembled from simple 3D shapes and is displayed at the extraction area, not yet a selectable playable character. These are development targets, not completed features.
 
 ## Controls
 
@@ -81,7 +81,7 @@ No real-money purchases are available in the current build. The credits economy 
 2. **Enemy encounters:** Add original hostile AI with patrol, alert, pursuit, cover-seeking, and damage states; build balanced combat spaces and encounter waves.
 3. **Campaign:** Build five connected missions with varied environments, mission briefings, objectives, dialogue, cinematic sequences, checkpoints, save progression, and mission completion screens.
 4. **Polish:** Replace blockout geometry with authored 3D environments and props; add character animation, sound design, music, effects, accessibility options, graphics settings, and performance optimization.
-5. **Multiplayer:** Add four-player local split-screen and up-to-eight-player online co-op only after the single-player FPS and networking foundations are stable.
+5. **Online multiplayer only:** Build dedicated/hosted internet sessions, player accounts or guest identities, matchmaking or invite codes, synchronized movement and combat, reconnect handling, and server-authoritative match state. No split-screen or local multiplayer. Online play comes after the core FPS and server infrastructure are stable.
 
 <!-- MACOS-DOWNLOADS-START -->
 ## Download for macOS
@@ -103,7 +103,7 @@ See the [full release notes and files](https://github.com/kamenriderspider1-code
 6. Activate all three relays, then reach extraction and press **E**.
 7. Press **R** at any time to restart. With a controller, use **A** to interact, **Start** to pause, and **Y** to restart.
 
-This is an early gameplay test. It does not yet have shooting, enemies, health, or a full campaign. Please report crashes, controls that do not respond, graphical glitches, or a relay/extraction that cannot be completed.
+This is an early gameplay test. It does not yet have shooting, enemies, health, online multiplayer, or a full campaign. Please report crashes, controls that do not respond, graphical glitches, or a relay/extraction that cannot be completed.
 
 ## Build
 
