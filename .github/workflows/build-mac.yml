@@ -158,3 +158,13 @@ jobs:
           path: ${{ matrix.artifact }}.dmg
           if-no-files-found: error
           retention-days: 30
+          permissions:
+  contents: write
+        - name: Upload DMG to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          files: |
+            dist/*.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
