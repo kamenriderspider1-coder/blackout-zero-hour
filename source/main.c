@@ -24,6 +24,7 @@ static int screen = 0;
 static int operator_id = 0;
 static int mission_time = 0;
 static bool beacon_found = false;
+static bool mission_won = false;
 
 static V3 v3(float x,float y,float z){ return (V3){x,y,z}; }
 static V3 sub(V3 a,V3 b){ return v3(a.x-b.x,a.y-b.y,a.z-b.z); }
@@ -130,16 +131,21 @@ static void scanner_model(void){
  cube(x+0.04f,y+0.18f,z+0.23f,0.17f,0.08f,0.025f,screen_c);
  cube(x+0.08f,y+0.05f,z+0.23f,0.09f,0.025f,0.025f,edge);
 }
+static void draw_beacon(void){
+ cube(-0.22f,0.0f,13.7f,0.44f,2.4f,0.44f,rgb(72,86,87));
+ cube(-0.34f,2.0f,13.58f,0.68f,0.34f,0.68f,rgb(28,177,184));
+ cube(-0.12f,2.42f,13.80f,0.24f,0.22f,0.24f,rgb(180,214,194));
+}
 static void draw_world(void){
  size_t n=(size_t)W*H;for(size_t i=0;i<n;i++)zbuf[i]=0.0f;
- scene();scanner_model();
+ scene();draw_beacon();scanner_model();
  rect((int)W/2-13,(int)H/2-1,26,2,rgb(220,231,224));
  rect((int)W/2-1,(int)H/2-13,2,26,rgb(220,231,224));
  rect(0,0,W,58,rgb(8,13,19));
  text(28,14,"BLACKOUT ZERO HOUR",rgb(91,208,211));
  text(28,34,"OPERATION NIGHTFALL",rgb(213,222,224));
  text(28,76,"WASD DPAD MOVE   RIGHT STICK LOOK   B MENU",rgb(222,229,228));
- text(28,(int)H-48,beacon_found?"BEACON SECURED  RETURN TO EXTRACTION":"OBJECTIVE: FIND THE SIGNAL BEACON",rgb(104,220,196));
+ text(28,(int)H-48,beacon_found?"BEACON SECURED  RETURN TO EXTRACTION":"OBJECTIVE: APPROACH RELAY AND PRESS A TO SCAN",rgb(104,220,196));
  text((int)W-190,(int)H-48,"SIGNAL ACTIVE",rgb(226,230,221));
 }
 static void panel(void){
@@ -165,6 +171,11 @@ static void panel(void){
   text(65,230,"FIND THE SIGNAL BEACON IN THE RUINED YARD.",rgb(210,220,220));
   text(65,270,"SCAN IT, THEN RETURN TO THE START POINT.",rgb(210,220,220));
   text(65,350,"A BEGIN   B BACK",rgb(87,214,218));
+ } else if(screen==4){
+  text(65,145,"MISSION COMPLETE",rgb(104,220,196));
+  text(65,205,"RELAY SIGNAL RESTORED",rgb(230,235,233));
+  text(65,255,"OPERATION NIGHTFALL SUCCESSFUL",rgb(210,220,220));
+  text(65,340,"A REPLAY MISSION   B MAIN MENU",rgb(87,214,218));
  }
 }
 int main(void){
@@ -181,7 +192,7 @@ int main(void){
   HidAnalogStickState left=padGetStickPos(&pad,0),right=padGetStickPos(&pad,1);
   if(down&HidNpadButton_Plus)break;
   if(screen==0){
-   if(down&HidNpadButton_A){screen=3;beacon_found=false;cam=(Cam){0,0,0};yaw=0;}
+   if(down&HidNpadButton_A){screen=3;beacon_found=false;mission_won=false;cam=(Cam){0,0,0};yaw=0;}
    if(down&HidNpadButton_X)screen=1;
    if(down&HidNpadButton_Y)screen=2;
   }else if(screen==1){
@@ -191,8 +202,14 @@ int main(void){
   }else if(screen==2){
    if(down&HidNpadButton_A){screen=3;beacon_found=false;cam=(Cam){0,0,0};yaw=0;}
    if(down&HidNpadButton_B)screen=0;
+  }else if(screen==4){
+   if(down&HidNpadButton_A){screen=3;beacon_found=false;mission_won=false;cam=(Cam){0,0,0};yaw=0;}
+   if(down&HidNpadButton_B)screen=0;
   }else{
-   if(down&HidNpadButton_A && cam.z>10.0f && cam.z<18.0f && fabsf(cam.x)<4.0f)beacon_found=true;
+   if(down&HidNpadButton_A && !beacon_found){
+    float dx=cam.x,dz=cam.z-13.7f;
+    if(dx*dx+dz*dz<9.0f)beacon_found=true;
+   }
    if(down&HidNpadButton_B)screen=0;
    float forward=(float)left.y/32768.0f*0.11f;
    float strafe=(float)left.x/32768.0f*0.10f;
@@ -203,6 +220,9 @@ int main(void){
    if(down&HidNpadButton_Down){cam.x-=sinf(yaw)*0.18f;cam.z-=cosf(yaw)*0.18f;}
    if(down&HidNpadButton_Left){cam.x-=cosf(yaw)*0.18f;cam.z+=sinf(yaw)*0.18f;}
    if(down&HidNpadButton_Right){cam.x+=cosf(yaw)*0.18f;cam.z-=sinf(yaw)*0.18f;}
+   if(cam.x < -8.0f)cam.x=-8.0f;if(cam.x>8.0f)cam.x=8.0f;
+   if(cam.z < -2.0f)cam.z=-2.0f;if(cam.z>24.0f)cam.z=24.0f;
+   if(beacon_found && cam.z<1.8f && fabsf(cam.x)<1.8f){mission_won=true;screen=4;}
    mission_time++;
   }
   fb=(uint32_t*)framebufferBegin(&g_framebuffer,&STRIDE);
