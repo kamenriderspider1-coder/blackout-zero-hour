@@ -25,7 +25,7 @@ jobs:
           mkdir -p "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS"
           mkdir -p "dist/BLACKOUT ZERO HOUR.app/Contents/Frameworks"
           SDL_PREFIX="$(brew --prefix sdl2)"
-          clang -O2 -Wall -Wextra $(sdl2-config --cflags) macos/main.c macos/net_client.c $(sdl2-config --libs) -lm -o "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
+          clang -O2 -Wall -Wextra $(sdl2-config --cflags) macos/main3d.c $(sdl2-config --libs) -framework OpenGL -lm -o "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
           cp "$SDL_PREFIX/lib/libSDL2-2.0.0.dylib" "dist/BLACKOUT ZERO HOUR.app/Contents/Frameworks/"
           install_name_tool -id "@executable_path/../Frameworks/libSDL2-2.0.0.dylib" "dist/BLACKOUT ZERO HOUR.app/Contents/Frameworks/libSDL2-2.0.0.dylib"
           install_name_tool -change "$SDL_PREFIX/lib/libSDL2-2.0.0.dylib" "@executable_path/../Frameworks/libSDL2-2.0.0.dylib" "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
