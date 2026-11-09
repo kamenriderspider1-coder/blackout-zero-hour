@@ -119,8 +119,8 @@ jobs:
 
           chmod +x "$EXECUTABLE"
           file "$EXECUTABLE"
-          lipo -verify_arch "${{ matrix.arch }}" "$EXECUTABLE"
-          lipo -verify_arch "${{ matrix.arch }}" "$APP_FRAMEWORKS/libSDL2-2.0.0.dylib"
+          lipo "$EXECUTABLE" -verify_arch "${{ matrix.arch }}"
+          lipo "$APP_FRAMEWORKS/libSDL2-2.0.0.dylib" -verify_arch "${{ matrix.arch }}"
           otool -L "$EXECUTABLE"
 
       - name: Create and verify drag-and-drop DMG
