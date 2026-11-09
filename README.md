@@ -26,6 +26,7 @@ The current native prototype in `macos/main3d.c` is an early playable 3D mission
 
 ### Current prototype controls
 - Return: start / resume
+- R: restart the mission at any time
 - W, A, S, D: move
 - Mouse: look around
 - Left / Right arrows: turn
@@ -92,6 +93,18 @@ Both installers below were generated and verified by the GitHub Actions release 
 
 See the [full release notes and files](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/tag/v1.0.0).
 <!-- MACOS-DOWNLOADS-END -->
+## Playtest checklist
+
+1. Download the Apple Silicon DMG if your Mac has an M-series chip, or the Intel DMG for an Intel Mac.
+2. Open the DMG and drag **BLACKOUT ZERO HOUR.app** into **Applications**.
+3. Open the app. If macOS blocks this unsigned test build, use Finder to Control-click the app, choose **Open**, then confirm.
+4. Press **Return** to start.
+5. Use **W/A/S/D** to move, the mouse to look, **Shift** to sprint, and **E** near a relay to activate it.
+6. Activate all three relays, then reach extraction and press **E**.
+7. Press **R** at any time to restart. With a controller, use **A** to interact, **Start** to pause, and **Y** to restart.
+
+This is an early gameplay test. It does not yet have shooting, enemies, health, or a full campaign. Please report crashes, controls that do not respond, graphical glitches, or a relay/extraction that cannot be completed.
+
 ## Build
 
 The GitHub Actions macOS workflow builds the native SDL2 + OpenGL application and packages a DMG. A downloadable installer should only be considered available after the workflow completes successfully and the artifact is verified. Builds are currently unsigned and may show a macOS Gatekeeper warning.
@@ -104,6 +117,7 @@ Connect a Bluetooth game controller to your Mac before launching the game. The g
 - Right stick: look
 - A / Cross: interact with a nearby relay or extraction
 - Start / Options: pause
+- Y: restart the mission
 - F1: open or close controller settings
 - In controller settings, press 1 to toggle inverted look, 2 to swap the movement and look sticks, 3 to cycle look sensitivity, and 4 to cycle stick deadzone
 - Escape: close settings or pause
