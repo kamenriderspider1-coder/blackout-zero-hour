@@ -86,8 +86,6 @@ No real-money purchases are available in the current build. The credits economy 
 <!-- MACOS-DOWNLOADS-START -->
 ## Download for macOS
 
-The latest installers package the complete app bundle, including its executable, Info.plist metadata, and bundled SDL2 runtime.
-
 Both installers below were generated and verified by the GitHub Actions release workflow.
 
 - [Apple Silicon (M1/M2/M3/M4)](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/download/v1.0.0/BLACKOUT-ZERO-HOUR-macOS-arm64.dmg)
