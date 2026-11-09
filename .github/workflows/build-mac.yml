@@ -88,8 +88,10 @@ jobs:
             -id "@executable_path/../Frameworks/libSDL2-2.0.0.dylib" \
             "$APP_FRAMEWORKS/libSDL2-2.0.0.dylib"
 
+          SDL_OLD_ID="$(otool -L "$EXECUTABLE" | awk '/libSDL2-2.0.0.dylib/ { sub(/^[[:space:]]*/, ""); sub(/ \\(.*/, ""); print; exit }')"
+          test -n "$SDL_OLD_ID"
           install_name_tool \
-            -change "$SDL_LIB" \
+            -change "$SDL_OLD_ID" \
             "@executable_path/../Frameworks/libSDL2-2.0.0.dylib" \
             "$EXECUTABLE"
 
