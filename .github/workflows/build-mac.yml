@@ -13,12 +13,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: blackout-zero-hour-macos-\${{ github.ref }}
+  group: blackout-zero-hour-macos-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   build:
-    name: Build macOS (\${{ matrix.name }})
+    name: Build macOS (${{ matrix.name }})
     strategy:
       fail-fast: false
       matrix:
@@ -32,7 +32,7 @@ jobs:
             arch: x86_64
             artifact: BLACKOUT-ZERO-HOUR-macOS-x64
 
-    runs-on: \${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     env:
       MACOSX_DEPLOYMENT_TARGET: "12.0"
@@ -51,11 +51,11 @@ jobs:
         run: |
           set -euo pipefail
           echo "Runner architecture: $(uname -m)"
-          echo "Requested architecture: \${{ matrix.arch }}"
+          echo "Requested architecture: ${{ matrix.arch }}"
           echo "SDL2 prefix: $(brew --prefix sdl2)"
           test -f macos/main3d.c
-          test -x "$(command -v clang)"
-          test -x "$(command -v sdl2-config)"
+          command -v clang
+          command -v sdl2-config
 
       - name: Compile native game and create app bundle
         shell: bash
@@ -73,7 +73,7 @@ jobs:
           mkdir -p "$APP_MACOS" "$APP_FRAMEWORKS"
 
           clang \
-            -arch "\${{ matrix.arch }}" \
+            -arch "${{ matrix.arch }}" \
             -mmacosx-version-min="$MACOSX_DEPLOYMENT_TARGET" \
             -O2 -Wall -Wextra \
             $(sdl2-config --cflags) \
@@ -122,8 +122,8 @@ jobs:
 
           chmod +x "$EXECUTABLE"
           file "$EXECUTABLE"
-          lipo -verify_arch "\${{ matrix.arch }}" "$EXECUTABLE"
-          lipo -verify_arch "\${{ matrix.arch }}" "$APP_FRAMEWORKS/libSDL2-2.0.0.dylib"
+          lipo -verify_arch "${{ matrix.arch }}" "$EXECUTABLE"
+          lipo -verify_arch "${{ matrix.arch }}" "$APP_FRAMEWORKS/libSDL2-2.0.0.dylib"
           otool -L "$EXECUTABLE"
 
       - name: Create and verify drag-and-drop DMG
@@ -133,7 +133,7 @@ jobs:
 
           APP="dist/BLACKOUT ZERO HOUR.app"
           DMG_ROOT="dist/dmg-root"
-          DMG_NAME="\${{ matrix.artifact }}.dmg"
+          DMG_NAME="${{ matrix.artifact }}.dmg"
 
           mkdir -p "$DMG_ROOT"
           ditto "$APP" "$DMG_ROOT/BLACKOUT ZERO HOUR.app"
@@ -152,7 +152,7 @@ jobs:
       - name: Upload downloadable DMG
         uses: actions/upload-artifact@v4
         with:
-          name: \${{ matrix.artifact }}-DMG
-          path: \${{ matrix.artifact }}.dmg
+          name: ${{ matrix.artifact }}-DMG
+          path: ${{ matrix.artifact }}.dmg
           if-no-files-found: error
           retention-days: 30
