@@ -8,10 +8,12 @@ An original Nintendo Switch homebrew 3D exploration and rescue prototype.
 - First-person camera with controller movement and look
 - Handheld signal scanner prop
 - Main menu, explorer selection, and field briefing
-- One short objective: locate and scan the disabled relay beacon
+- A visible relay beacon in the 3D environment
+- Complete mission loop: approach and scan the relay, then return to the extraction point
+- Mission-complete screen with replay and main-menu options
 - On-screen objective and status HUD
 
-This is an early prototype, not a finished commercial-scale game. It uses simple flat-shaded geometry and has not yet been tested on physical Switch hardware.
+This is a small, self-contained homebrew V1, not a commercial-scale production. It uses simple flat-shaded geometry and a software renderer. The source builds into an NRO, but runtime behavior still needs confirmation on physical Switch hardware.
 
 ## Build
 
@@ -38,8 +40,8 @@ Launch it from Homebrew Menu on a Switch running Atmosphère.
 - Left stick: move
 - Right stick: look around
 - D-pad: move
-- A: scan beacon when close
-- B: return to menu
+- A: scan beacon when close, then replay after mission completion
+- B: return to menu, or return to menu after mission completion
 - Plus: exit
 
 This is an unofficial homebrew project and is not affiliated with or endorsed by Nintendo.
