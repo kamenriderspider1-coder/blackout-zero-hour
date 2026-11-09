@@ -1,7 +1,11 @@
-name: Build BLACKOUT ZERO HOUR
+name: Build BLACKOUT ZERO HOUR for macOS
 on:
   push:
     branches: [main]
+    paths:
+      - 'macos/**'
+      - '.github/workflows/build-macos.yml'
+      - 'README.md'
   workflow_dispatch:
 jobs:
   macos:
@@ -10,13 +14,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install SDL2
         run: brew install sdl2
-      - name: Build native macOS app
+      - name: Compile application
+        shell: bash
         run: |
-          mkdir -p dist/BLACKOUT\ ZERO\ HOUR.app/Contents/MacOS
-          mkdir -p dist/BLACKOUT\ ZERO\ HOUR.app/Contents/Resources
-          SDL_CFLAGS="$(sdl2-config --cflags)"
-          SDL_LIBS="$(sdl2-config --static-libs)"
-          clang -O2 -Wall $SDL_CFLAGS macos/main.c $SDL_LIBS -o "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
+          set -euxo pipefail
+          mkdir -p "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS"
+          mkdir -p "dist/BLACKOUT ZERO HOUR.app/Contents/Frameworks"
+          SDL_PREFIX="$(brew --prefix sdl2)"
+          clang -O2 -Wall -Wextra $(sdl2-config --cflags) macos/main.c $(sdl2-config --libs) -o "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
+          cp "$SDL_PREFIX/lib/libSDL2-2.0.0.dylib" "dist/BLACKOUT ZERO HOUR.app/Contents/Frameworks/"
+          install_name_tool -id "@executable_path/../Frameworks/libSDL2-2.0.0.dylib" "dist/BLACKOUT ZERO HOUR.app/Contents/Frameworks/libSDL2-2.0.0.dylib"
+          install_name_tool -change "$SDL_PREFIX/lib/libSDL2-2.0.0.dylib" "@executable_path/../Frameworks/libSDL2-2.0.0.dylib" "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
           cat > "dist/BLACKOUT ZERO HOUR.app/Contents/Info.plist" <<'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -29,10 +37,13 @@ jobs:
           <key>NSHighResolutionCapable</key><true/>
           </dict></plist>
           PLIST
-          cp "$(brew --prefix sdl2)/lib/"*.dylib "dist/BLACKOUT ZERO HOUR.app/Contents/Frameworks/" 2>/dev/null || true
+          file "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
+          otool -L "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
           ditto -c -k --sequesterRsrc --keepParent "dist/BLACKOUT ZERO HOUR.app" "BLACKOUT-ZERO-HOUR-macOS.zip"
-      - uses: actions/upload-artifact@v4
+      - name: Upload downloadable ZIP
+        uses: actions/upload-artifact@v4
         with:
           name: BLACKOUT-ZERO-HOUR-macOS
           path: BLACKOUT-ZERO-HOUR-macOS.zip
           if-no-files-found: error
+          retention-days: 30
