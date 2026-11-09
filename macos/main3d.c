@@ -91,6 +91,7 @@ static M4 perspective(float fov,float aspect,float nearZ,float farZ){M4 m={0};fl
 static M4 lookAt(V3 eye,V3 center,V3 up){V3 f=norm(sub(center,eye)),s=norm(cross(f,up)),u=cross(s,f);M4 m=identity();m.m[0]=s.x;m.m[4]=s.y;m.m[8]=s.z;m.m[1]=u.x;m.m[5]=u.y;m.m[9]=u.z;m.m[2]=-f.x;m.m[6]=-f.y;m.m[10]=-f.z;m.m[12]=-dot(s,eye);m.m[13]=-dot(u,eye);m.m[14]=dot(f,eye);return m;}
 static bool wall(float x,float z){int a=(int)floorf(x),b=(int)floorf(z);return a<0||b<0||a>=MAP_W||b>=MAP_H||mapData[b][a]=='#';}
 static GLuint compileShader(GLenum type,const char *src){GLuint s=glCreateShader(type);glShaderSource(s,1,&src,NULL);glCompileShader(s);GLint ok=0;glGetShaderiv(s,GL_COMPILE_STATUS,&ok);if(!ok){char log[2048];glGetShaderInfoLog(s,sizeof(log),NULL,log);fprintf(stderr,"Shader error: %s\n",log);glDeleteShader(s);return 0;}return s;}
+static void buildSphereMesh(void);
 static bool initGL(void){
  const char *vs="#version 150\nin vec3 aPos; in vec3 aNormal; uniform mat4 uVP; uniform mat4 uModel; out vec3 vNormal; out vec3 vWorld; void main(){vec4 w=uModel*vec4(aPos,1.0);vWorld=w.xyz;vNormal=mat3(uModel)*aNormal;gl_Position=uVP*w;}";
  const char *fs="#version 150\nin vec3 vNormal; in vec3 vWorld; uniform vec3 uColor; uniform vec3 uLight; out vec4 fragColor; void main(){vec3 n=normalize(vNormal);vec3 l=normalize(uLight-vWorld);float d=max(dot(n,l),0.0);float shade=0.32+0.68*d;fragColor=vec4(uColor*shade,1.0);}";
