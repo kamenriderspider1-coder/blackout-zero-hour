@@ -31,7 +31,8 @@ The current native prototype in `macos/main3d.c` is an early playable 3D mission
 - Mouse: look around
 - Left / Right arrows: turn
 - E: activate a nearby relay; after all three, interact at extraction
-- Shift: sprint\n- Escape: pause / resume
+- Shift: sprint
+- Escape: pause / resume
 
 ### Intended FPS controls
 - W, A, S, D: move
@@ -93,6 +94,7 @@ Both installers below were generated and verified by the GitHub Actions release 
 
 See the [full release notes and files](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/tag/v1.0.0).
 <!-- MACOS-DOWNLOADS-END -->
+
 ## Playtest checklist
 
 1. Download the Apple Silicon DMG if your Mac has an M-series chip, or the Intel DMG for an Intel Mac.
