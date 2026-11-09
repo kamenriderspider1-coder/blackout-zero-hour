@@ -124,14 +124,11 @@ static void scene(void){
  cube(-2.0f,0,12,0.5f,0.9f,0.5f,rgb(110,76,46));
 }
 static void scanner_model(void){
- float x=0.48f,y=-0.47f,z=1.25f;
- uint32_t metal=rgb(30,37,43),edge=rgb(83,97,105),accent=rgb(20,111,121);
- quad(v3(x,y,z),v3(x+0.20f,y,z),v3(x+0.20f,y+0.14f,z),v3(x,y+0.14f,z),metal);
- quad(v3(x,y+0.14f,z),v3(x+0.20f,y+0.14f,z),v3(x+0.20f,y+0.14f,z+0.95f),v3(x,y+0.14f,z+0.95f),edge);
- quad(v3(x+0.04f,y+0.15f,z+0.15f),v3(x+0.16f,y+0.15f,z+0.15f),v3(x+0.16f,y+0.15f,z+0.80f),v3(x+0.04f,y+0.15f,z+0.80f),metal);
- if(equipped[0])cube(x+0.03f,y+0.28f,z+0.24f,0.14f,0.09f,0.20f,accent);
- if(equipped[1])cube(x+0.07f,y+0.14f,z+0.82f,0.06f,0.06f,0.34f,edge);
- if(equipped[2])cube(x+0.06f,y-0.15f,z+0.25f,0.08f,0.25f,0.16f,accent);
+ float x=0.52f,y=-0.48f,z=1.35f;
+ uint32_t casing=rgb(28,43,49),screen_c=rgb(24,176,179),edge=rgb(89,111,116);
+ cube(x,y,z,0.25f,0.30f,0.22f,casing);
+ cube(x+0.04f,y+0.18f,z+0.23f,0.17f,0.08f,0.025f,screen_c);
+ cube(x+0.08f,y+0.05f,z+0.23f,0.09f,0.025f,0.025f,edge);
 }
 static void draw_world(void){
  size_t n=(size_t)W*H;for(size_t i=0;i<n;i++)zbuf[i]=0.0f;
