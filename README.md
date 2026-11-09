@@ -43,6 +43,35 @@ The current native prototype in `macos/main3d.c` is an early 3D blockout. It has
 
 The intended FPS controls describe the target design; they are not all implemented in the current prototype yet.
 
+## Credits, cosmetics, perks, and future store
+
+The planned progression system will let players earn **in-game credits by playing**. Credits are gameplay rewards, not something required to finish missions.
+
+Planned ways to earn credits:
+- Complete missions and optional objectives.
+- Finish mission challenges and replayable milestones.
+- Earn completion and performance rewards.
+
+Planned ways to spend earned credits:
+- Unlock operator and weapon cosmetic skins.
+- Unlock fictional weapon options and cosmetic attachment appearances.
+- Unlock and customize perk loadouts.
+- Save multiple classes and cosmetic presets.
+
+### Future real-money credit purchases
+
+The game may add an **optional** real-money credit purchase feature in a later update. It is not part of the current prototype and must remain disabled until it is deliberately implemented, tested, and approved for the distribution platform.
+
+If added, the store should:
+- Keep gameplay credits earnable without paying.
+- Clearly show prices and exactly how many credits a purchase provides.
+- Use the platform's approved purchase flow and verify transactions securely.
+- Require appropriate account-holder/parental approval where applicable.
+- Avoid randomized paid loot boxes and pay-to-win advantages.
+- Never store payment-card details in the game.
+
+No real-money purchases are available in the current build. The credits economy and store are planned features, not implemented functionality yet.
+
 ## Development milestones
 
 1. **Playable FPS foundation:** Replace relay scanning as the main loop with a combat-focused mission; add a visible weapon presentation, firing, aiming, reload/ammo state, player health, hit feedback, and a proper FPS HUD.
