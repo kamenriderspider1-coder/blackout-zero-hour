@@ -1,29 +1,36 @@
 # BLACKOUT: ZERO HOUR
 
-An original Nintendo Switch homebrew exploration and rescue game project.
+An original Nintendo Switch homebrew exploration and rescue game prototype.
 
-## Current test build
+## Current menu structure
+
+- **Campaign:** Operation Nightfall story mission, explorer selection, and field briefing
+- **Multiplayer:** public matchmaking and private-room menu, designed around 12 player slots
+- **Co-op Operations:** team expedition and private team-room menu, designed around up to 12 players
+- **Survival:** relay recovery challenge
+- **Extras:** explorer selection, field briefing, and online status
+
+## Online multiplayer status
+
+**12 players is the design target, not a working online feature yet.** The current NRO does not connect to a matchmaking or game server. Wi-Fi connectivity alone is not enough: online play still needs a hosted service for account/session handling, lobby discovery, invites, and synchronized game state. The lobby screen currently reports that the online service is not configured. No players can join yet.
+
+The next engineering milestone is a small dedicated session service plus a Switch network client, followed by testing with multiple consoles. The server endpoint and deployment environment must be selected and configured before real online play can be enabled.
+
+## Current prototype
 
 - Software-rendered 3D scene with perspective projection and depth buffering
-- First-person camera with controller movement and look
-- Handheld signal scanner prop
-- Main operations menu with Campaign, Multiplayer, Co-op Operations, Survival, and Extras
-- Multiplayer and co-op menu shells with an 8-player target
-- Campaign and survival entry points, explorer selection, and field briefing
-- A visible relay beacon in the 3D environment
-- Complete mission loop: approach and scan the relay, then return to the extraction point
+- First-person camera movement and look
+- Handheld signal scanner and visible relay beacon
+- One complete offline mission loop: locate and scan the relay, then return to extraction
 - Mission-complete screen with replay and main-menu options
-- On-screen objective and status HUD
 
-The current build is an early playable offline foundation with simple flat-shaded geometry and a software renderer. The multiplayer and co-op screens are menu/lobby placeholders only: there is no matchmaking, network session, server, or player synchronization yet. Real 8-player internet play requires a separately hosted service, a network protocol, connection handling, and testing on multiple consoles. The source changes have not yet been rebuilt or tested on physical Switch hardware.
+This remains an early prototype, not a commercial-scale game. Several menu destinations are scaffolding and do not yet contain full game modes. It uses simple flat-shaded geometry and a software renderer. Runtime behavior still needs confirmation on physical Switch hardware.
 
-## Build
+## Build and install
 
 GitHub Actions builds the NRO using devkitPro devkitA64/libnx. Download the `BLACKOUT-ZERO-HOUR-NRO` artifact from the newest successful Actions run.
 
-## Install
-
-Extract the artifact and copy `blackout-zero-hour.nro` to:
+Copy `blackout-zero-hour.nro` to:
 
 `SD:/switch/blackout-zero-hour/blackout-zero-hour.nro`
 
@@ -31,22 +38,7 @@ Launch it from Homebrew Menu on a Switch running Atmosphère.
 
 ## Controls
 
-**Menus**
-- Up / Down: choose Campaign, Multiplayer, Co-op Operations, Survival, or Extras
-- A: open selection
-- B: back
-- Campaign: A starts the mission, X selects explorer, Y opens briefing
-- B: back
-- Plus: exit
-
-**Mission**
-- Left stick: move
-- Right stick: look around
-- D-pad: move
-- A: scan beacon when close, then replay after mission completion
-- B: return to menu, or return to menu after mission completion
-- Plus: exit
-
-Multiplayer status: planned, not yet functional. The lobby screen intentionally reports that no server is configured.
+- Menus: D-pad Up/Down to navigate, A to select, B to go back, Plus to exit
+- Mission: left stick to move, right stick to look, D-pad to move, A to scan the beacon when close, B to return to menu
 
 This is an unofficial homebrew project and is not affiliated with or endorsed by Nintendo.
