@@ -1,34 +1,35 @@
 # BLACKOUT: ZERO HOUR
 
-An original exploration and rescue game project with Nintendo Switch homebrew and native macOS targets.
+An original first-person exploration game for macOS, with a separate Nintendo Switch homebrew target.
 
-## macOS version
+## macOS game
 
-A native SDL2 desktop build is provided for Apple Silicon and Intel Macs. It runs as a standard macOS app and does not require Windows or a virtual machine.
+The Mac build is a native SDL2 application with a real-time first-person ray-cast 3D environment. Explore the abandoned research zone, locate three signal relays, scan them, then reach the safe zone. The game is designed around exploration and rescue, not weapon combat.
 
 ### Controls
-- Main menus: W/S or Up/Down, Return to select, Escape to go back
-- Gameplay: WASD or arrow keys to move, E to scan the relay, Escape to return to menu
-- Return on the mission-complete screen to replay
+- Main menu: Return to begin
+- Move: W, A, S, D
+- Look: Mouse
+- Alternate look: Left / Right arrow keys
+- Scan a nearby relay: E
+- Pause / resume: Escape / Return
 
 ### Current playable content
-- Main menu with Campaign, Multiplayer, Co-op Operations, Survival, and Extras
-- A playable offline relay-recovery mission in Campaign
-- A survival entry using the same current prototype mission
-- Mission-complete and replay flow
+- First-person 3D-style environment with wall depth, perspective, collision, and mouse look
+- Three relay objectives with proximity scanning
+- Safe-zone extraction objective after restoring all relays
+- Pause, completion, and replay flow
 
-### Online status
-The 12-player multiplayer and co-op menus are present, but real online sessions are not yet implemented. A dedicated server, matchmaking, lobby/session protocol, and client networking still need to be built and deployed. The menu does not imply that online play is currently available.
-
-## Nintendo Switch
-The Switch target remains in `source/main.c` and uses devkitPro/libnx. Build it with the repository's Makefile and install the resulting NRO under `SD:/switch/blackout-zero-hour/`.
+### Not implemented yet
+Online multiplayer, co-op networking, additional missions, save progression, advanced 3D models, and production-level audio are not implemented. The renderer is a lightweight ray-casting engine, not a modern full polygonal 3D engine. The build must pass the macOS CI workflow before a downloadable app can be claimed.
 
 ## Build macOS locally
 Install SDL2 and Xcode Command Line Tools, then run:
 ```sh
 brew install sdl2
-clang -O2 $(sdl2-config --cflags) macos/main.c $(sdl2-config --libs) -o blackout-zero-hour
+clang -O2 $(sdl2-config --cflags) macos/main.c $(sdl2-config --libs) -lm -o blackout-zero-hour
 ./blackout-zero-hour
 ```
 
-This is an early cross-platform prototype. It has not yet been verified on physical Switch hardware or across different Mac models.
+## Nintendo Switch
+The Switch target remains separate in `source/main.c`; it is not the same game build and has not been verified on physical Switch hardware.
