@@ -139,9 +139,8 @@ static void draw_world(void){
  text(28,14,"BLACKOUT ZERO HOUR",rgb(91,208,211));
  text(28,34,"OPERATION NIGHTFALL",rgb(213,222,224));
  text(28,76,"WASD DPAD MOVE   RIGHT STICK LOOK   B MENU",rgb(222,229,228));
- char stats[80];snprintf(stats,sizeof(stats),"PRIMARY %s   KIT %s%s%s",weapon==0?"VX-9":weapon==1?"KITE":"ORBIT",equipped[0]?"OPT ":"",equipped[1]?"BAR ":"",equipped[2]?"GRIP":"");
- text(28,(int)H-48,stats,rgb(104,220,196));
- text((int)W-190,(int)H-48,"VITALS 100  AMMO 30",rgb(226,230,221));
+ text(28,(int)H-48,beacon_found?"BEACON SECURED  RETURN TO EXTRACTION":"OBJECTIVE: FIND THE SIGNAL BEACON",rgb(104,220,196));
+ text((int)W-190,(int)H-48,"SIGNAL ACTIVE",rgb(226,230,221));
 }
 static void panel(void){
  rect(0,0,W,H,rgb(7,12,18));rect(30,30,W-60,H-60,rgb(18,27,36));
