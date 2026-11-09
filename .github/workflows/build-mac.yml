@@ -145,7 +145,8 @@ jobs:
           set -euo pipefail
           APP="dist/BLACKOUT ZERO HOUR.app"
           ICONSET="$RUNNER_TEMP/BLACKOUT.iconset"
-          mkdir -p "$ICONSET"
+          rm -rf "$ICONSET"
+          mkdir -p "$ICONSET" "$APP/Contents/Resources"
           cat > "$RUNNER_TEMP/make-icon.swift" <<'SWIFT'
           import AppKit
           let size = 1024
@@ -182,6 +183,7 @@ jobs:
             [[ "$pixels" != "$((size*2))" ]] || name="${name}@2x"
             sips -z "$pixels" "$pixels" "$RUNNER_TEMP/icon-1024.png" --out "$ICONSET/$name.png" >/dev/null
           done
+          find "$ICONSET" -maxdepth 1 -type f -print
           iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/BLACKOUT.icns"
           plutil -lint "$APP/Contents/Info.plist"
           test -s "$APP/Contents/Resources/BLACKOUT.icns"
