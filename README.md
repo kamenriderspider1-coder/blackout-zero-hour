@@ -54,3 +54,17 @@ The intended FPS controls describe the target design; they are not all implement
 ## Build
 
 The GitHub Actions macOS workflow builds the native SDL2 + OpenGL application and packages a DMG. A downloadable installer should only be considered available after the workflow completes successfully and the artifact is verified. Builds are currently unsigned and may show a macOS Gatekeeper warning.
+
+## Bluetooth controller support (Version 1)
+
+Connect a Bluetooth game controller to your Mac before launching the game. The game uses SDL's standard game-controller mappings, so common Xbox, PlayStation, and compatible controllers should be detected when macOS exposes them as game controllers.
+
+- Left stick: move
+- Right stick: look
+- A / Cross: interact with a nearby relay
+- Start / Options: pause
+- F1: open or close controller settings
+- In controller settings, press 1 to toggle inverted look, 2 to swap the movement and look sticks, 3 to cycle look sensitivity, and 4 to cycle stick deadzone
+- Escape: close settings or pause
+
+Settings are saved in the macOS application preferences folder and reused next time. The game window title displays the current stick layout, look direction, sensitivity, and deadzone. Keyboard movement remains available.
