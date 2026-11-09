@@ -1,105 +1,131 @@
 #include <SDL.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#define SW 1280
-#define SH 720
-typedef enum { MENU, CAMPAIGN, MULTIPLAYER, COOP, SURVIVAL, EXTRAS, PLAY, COMPLETE, ONLINE_INFO } Screen;
-static Screen screen=MENU;
-static int selected=0, mission=0, scan=0, seconds_left=180;
-static float px=640, py=600;
+#define W 1280
+#define H 720
+#define MAP_W 16
+#define MAP_H 16
+#define PI 3.14159265358979323846
+static const char *world[MAP_H]={
+"################",
+"#..............#",
+"#..##..........#",
+"#..##....###...#",
+"#..............#",
+"#....####......#",
+"#..............#",
+"#......##......#",
+"#......##......#",
+"#..............#",
+"#...###........#",
+"#...#..........#",
+"#...........##.#",
+"#...........##.#",
+"#..............#",
+"################"};
+static SDL_Window *win;
+static SDL_Renderer *ren;
+static float px=2.5f,py=2.5f,angle=0.15f;
+static int found=0,scene=0,menu=0;
 static bool running=true;
-static SDL_Window *window;
-static SDL_Renderer *renderer;
-
-static void color(Uint8 r,Uint8 g,Uint8 b){SDL_SetRenderDrawColor(renderer,r,g,b,255);}
-static void box(int x,int y,int w,int h,Uint8 r,Uint8 g,Uint8 b){color(r,g,b);SDL_Rect a={x,y,w,h};SDL_RenderFillRect(renderer,&a);}
-static void label(int x,int y,const char *s,Uint8 r,Uint8 g,Uint8 b){
- // Tiny built-in 5x7 bitmap font for A-Z, 0-9 and basic punctuation.
- static const unsigned char font[36][5]={
+static const float beaconX[3]={12.5f,3.5f,10.5f};
+static const float beaconY[3]={2.5f,9.5f,12.5f};
+static bool collected[3]={false,false,false};
+static float clampf(float x,float a,float b){return x<a?a:(x>b?b:x);}
+static bool wall(float x,float y){int a=(int)x,b=(int)y;return a<0||b<0||a>=MAP_W||b>=MAP_H||world[b][a]=='#';}
+static void rect(int x,int y,int w,int h,Uint8 r,Uint8 g,Uint8 b){SDL_SetRenderDrawColor(ren,r,g,b,255);SDL_Rect q={x,y,w,h};SDL_RenderFillRect(ren,&q);}
+static void text(int x,int y,const char*s,SDL_Color c){
+ // Compact readable bitmap alphabet.
+ static const unsigned char glyph[36][5]={
  {62,81,73,69,62},{127,73,73,73,54},{62,65,65,65,34},{127,65,65,34,28},{127,73,73,73,65},{127,9,9,9,1},{62,65,73,73,122},{127,8,8,8,127},{0,65,127,65,0},{32,64,65,63,1},{127,8,20,34,65},{127,64,64,64,64},{127,2,12,2,127},{127,4,8,16,127},{62,65,65,65,62},{127,9,9,9,6},{62,65,81,33,94},{127,9,25,41,70},{70,73,73,73,49},{1,1,127,1,1},{63,64,64,64,63},{31,32,64,32,31},{63,64,56,64,63},{99,20,8,20,99},{7,8,112,8,7},{97,81,73,69,67},
  {62,81,73,69,62},{0,66,127,64,0},{98,81,73,73,70},{34,65,73,73,54},{24,20,18,127,16},{47,73,73,73,49},{62,73,73,73,50},{1,113,9,5,3},{54,73,73,73,54},{38,73,73,73,62}};
- while(*s){char c=*s++;int idx=-1;if(c>='A'&&c<='Z')idx=c-'A';else if(c>='0'&&c<='9')idx=26+c-'0';
- if(idx>=0){for(int col=0;col<5;col++)for(int row=0;row<7;row++)if(font[idx][col]&(1<<row))box(x+col*2,y+row*2,2,2,r,g,b);}
- else if(c=='-')box(x,y+6,8,2,r,g,b);
- else if(c==':') {box(x+3,y+3,2,2,r,g,b);box(x+3,y+10,2,2,r,g,b);}
+ SDL_SetRenderDrawColor(ren,c.r,c.g,c.b,255);
+ while(*s){char ch=*s++;int i=ch>='A'&&ch<='Z'?ch-'A':(ch>='0'&&ch<='9'?26+ch-'0':-1);
+ if(i>=0)for(int a=0;a<5;a++)for(int b=0;b<7;b++)if(glyph[i][a]&(1<<b)){SDL_Rect q={x+a*2,y+b*2,2,2};SDL_RenderFillRect(ren,&q);}
+ else if(ch=='-'){SDL_Rect q={x,y+6,8,2};SDL_RenderFillRect(ren,&q);}
+ else if(ch==':'){SDL_Rect q={x+3,y+3,2,2};SDL_RenderFillRect(ren,&q);q.y+=7;SDL_RenderFillRect(ren,&q);}
  x+=12;}
 }
-static void background(void){box(0,0,SW,SH,7,12,18);box(32,32,SW-64,SH-64,18,27,36);box(32,32,SW-64,4,26,179,185);label(65,65,"BLACKOUT ZERO HOUR",87,214,218);}
-static void menu(void){
- const char *items[]={"CAMPAIGN","MULTIPLAYER","CO-OP OPERATIONS","SURVIVAL","EXTRAS"};
- background();label(65,115,"MAIN OPERATIONS",230,235,233);
- for(int i=0;i<5;i++){if(i==selected)box(55,155+i*55,560,42,28,74,78);label(82,166+i*55,items[i],i==selected?105:205,i==selected?231:216,i==selected?222:218);}
- label(65,455,"UP DOWN OR W S TO SELECT  ENTER TO OPEN",87,214,218);
- label(65,490,"MAC VERSION 1  -  APPLE SILICON AND INTEL",160,180,188);
+static void panel(void){rect(0,0,W,H,5,11,18);rect(28,28,W-56,H-56,12,23,31);rect(28,28,W-56,4,36,190,190);text(58,55,"BLACKOUT ZERO HOUR", (SDL_Color){115,225,222,255});}
+static void menu_screen(void){
+ panel();text(60,125,"THE QUIET ZONE",(SDL_Color){240,245,238,255});
+ text(60,180,"A FIRST PERSON EXPLORATION AND RESCUE EXPERIENCE",(SDL_Color){130,205,204,255});
+ rect(55,260,650,190,18,39,47);text(90,300,"ENTER - BEGIN EXPEDITION",(SDL_Color){240,245,238,255});
+ text(90,345,"WASD MOVE  MOUSE OR LEFT RIGHT LOOK",(SDL_Color){140,210,208,255});
+ text(90,390,"E SCAN BEACONS  ESC PAUSE",(SDL_Color){140,210,208,255});
+ text(60,540,"RESTORE THREE SIGNAL RELAYS AND REACH THE SAFE ZONE",(SDL_Color){220,225,218,255});
 }
-static void submenu(const char *title,const char **items,int n){
- background();label(65,125,title,230,235,233);
- for(int i=0;i<n;i++){if(i==selected)box(55,175+i*52,900,40,28,74,78);label(80,186+i*52,items[i],i==selected?105:210,i==selected?231:220,i==selected?222:220);}
- label(65,SH-105,"UP DOWN SELECT  ENTER  ESC BACK",87,214,218);
+static void draw_world(void){
+ // Sky and ground gradient.
+ for(int y=0;y<H/2;y++){Uint8 k=(Uint8)(16+y/12);rect(0,y,W,1, k, (Uint8)(k+8),(Uint8)(k+13));}
+ for(int y=H/2;y<H;y++){Uint8 k=(Uint8)(24+(y-H/2)/5);rect(0,y,W,1,(Uint8)(k/2),(Uint8)(k+5),(Uint8)(k+2));}
+ const float fov=PI/3.0f;
+ for(int x=0;x<W;x++){
+  float ra=angle+((float)x/W-0.5f)*fov;
+  float dx=cosf(ra),dy=sinf(ra),dist=0.0f;int hit=0,side=0;
+  while(dist<24.0f&&!hit){dist+=0.025f;float tx=px+dx*dist,ty=py+dy*dist;if(wall(tx,ty)){hit=1;side=fabsf(tx-roundf(tx))<fabsf(ty-roundf(ty))?0:1;}}
+  float corrected=dist*cosf(ra-angle);if(corrected<0.05f)corrected=0.05f;
+  int height=(int)(H*0.82f/corrected);int top=H/2-height/2;if(top<0)top=0;int bottom=H/2+height/2;if(bottom>H)bottom=H;
+  float hitX=side?px+dx*dist:px+dx*dist;float hitY=side?py+dy*dist:py+dy*dist;
+  float edge=side?hitX-floorf(hitX):hitY-floorf(hitY);
+  int stripe=((int)(edge*12)%2);float shade=clampf(1.0f-corrected/18.0f,0.18f,1.0f);
+  int r=(int)((side?53:73)*shade),g=(int)((side?90:116)*shade),b=(int)((side?96:113)*shade);
+  if(stripe){r=(int)(r*0.78f);g=(int)(g*0.82f);b=(int)(b*0.84f);}
+  rect(x,top,1,bottom-top,(Uint8)r,(Uint8)g,(Uint8)b);
+ }
+ // Beacon markers projected as glowing floating diamonds.
+ for(int i=0;i<3;i++)if(!collected[i]){
+  float dx=beaconX[i]-px,dy=beaconY[i]-py,d=sqrtf(dx*dx+dy*dy),a=atan2f(dy,dx)-angle;
+  while(a>PI)a-=2*PI;while(a<-PI)a+=2*PI;
+  if(fabsf(a)<fov*0.58f&&d>0.4f){int sx=W/2+(int)(a/(fov/2)*(W/2));int sy=H/2-(int)(35.0f/d*8.0f);
+   int size=(int)(100.0f/d);if(size<5)size=5;if(size>36)size=36;
+   rect(sx-size/2,sy-size/2,size,size,35,220,215);rect(sx-size/4,sy-size/4,size/2,size/2,180,255,235);}
+ }
+ // HUD
+ rect(24,24,360,78,4,15,21);text(44,43,"EXPEDITION NIGHTFALL",(SDL_Color){220,235,229,255});
+ char status[64];snprintf(status,sizeof(status),"SIGNALS RESTORED: %d / 3",found);text(44,70,status,(SDL_Color){115,225,222,255});
+ rect(W/2-2,H/2-10,4,20,230,245,235);rect(W/2-10,H/2-2,20,4,230,245,235);
+ rect(24,H-62,690,38,4,15,21);text(42,H-50,"FIND THE GLOWING RELAYS  -  SCAN WITH E",(SDL_Color){170,220,214,255});
+ if(found==3){rect(W-350,24,320,52,4,36,34);text(W-330,43,"SAFE ZONE UNLOCKED",(SDL_Color){130,245,190,255});}
 }
-static void game(void){
- background();label(65,75,mission==1?"SURVIVAL RELAY RECOVERY":"CAMPAIGN: OPERATION NIGHTFALL",220,230,230);
- box(100,140,1080,480,37,47,48);
- // Ruined-yard structures and paths
- box(250,235,130,90,70,80,82);box(830,200,150,130,65,75,78);box(570,400,170,100,80,82,72);
- box(620,180,40,40,28,177,184); // beacon
- color(210,225,220);SDL_Rect player={(int)px-12,(int)py-12,24,24};SDL_RenderFillRect(renderer,&player);
- color(230,240,230);SDL_RenderDrawLine(renderer,(int)px,(int)py,(int)px,(int)py-20);
- label(65,645,scan?"BEACON SECURED  RETURN TO EXTRACTION":"FIND THE RELAY BEACON AND PRESS E TO SCAN",104,220,196);
- label(970,75,"WASD MOVE  E SCAN  ESC MENU",210,220,220);
- if(scan){box(560,560,160,8,104,220,196);}
- if(scan && px>600 && py>535){screen=COMPLETE;}
-}
-static void draw(void){
- if(screen==MENU){menu();return;}
- if(screen==CAMPAIGN){const char *a[]={"START OPERATION NIGHTFALL","MISSION BRIEFING","BACK"};submenu("CAMPAIGN",a,3);}
- else if(screen==MULTIPLAYER){const char *a[]={"PUBLIC MATCHMAKING","PRIVATE LOBBY","12 PLAYER TARGET","BACK"};submenu("MULTIPLAYER",a,4);label(80,430,"ONLINE SERVER NOT CONFIGURED YET",245,190,112);}
- else if(screen==COOP){const char *a[]={"TEAM EXPEDITION","PRIVATE TEAM ROOM","BACK"};submenu("CO-OP OPERATIONS",a,3);label(80,390,"UP TO 12 PLAYERS PLANNED  -  SERVER REQUIRED",245,190,112);}
- else if(screen==SURVIVAL){const char *a[]={"START SURVIVAL","BACK"};submenu("SURVIVAL",a,2);}
- else if(screen==EXTRAS){const char *a[]={"EXPLORER SELECT","STATISTICS","SETTINGS","CREDITS","BACK"};submenu("EXTRAS",a,5);}
- else if(screen==PLAY)game();
- else if(screen==COMPLETE){background();label(65,180,"MISSION COMPLETE",104,220,196);label(65,245,"RELAY SIGNAL RESTORED",230,235,233);label(65,340,"ENTER REPLAY  ESC MAIN MENU",87,214,218);}
- else if(screen==ONLINE_INFO){background();label(65,150,"ONLINE MULTIPLAYER",230,235,233);label(65,220,"12 PLAYER TARGET",104,220,196);label(65,270,"SERVER NOT CONFIGURED",245,190,112);label(65,320,"ESC BACK",87,214,218);}
-}
-static void start_game(int m){mission=m;px=640;py=600;scan=0;screen=PLAY;}
-int main(int argc,char **argv){
+static void reset(void){px=2.5f;py=2.5f;angle=0.15f;found=0;for(int i=0;i<3;i++)collected[i]=false;scene=1;}
+int main(int argc,char**argv){
+ (void)argc;(void)argv;
  if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS)!=0)return 1;
- window=SDL_CreateWindow("BLACKOUT: ZERO HOUR",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,SW,SH,SDL_WINDOW_ALLOW_HIGHDPI|SDL_WINDOW_RESIZABLE);
- if(!window){SDL_Quit();return 2;}
- renderer=SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
- if(!renderer)renderer=SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
- if(!renderer){SDL_DestroyWindow(window);SDL_Quit();return 3;}
- Uint64 previous_counter=SDL_GetPerformanceCounter();
- const double counter_frequency=(double)SDL_GetPerformanceFrequency();
+ win=SDL_CreateWindow("BLACKOUT: ZERO HOUR",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,W,H,SDL_WINDOW_ALLOW_HIGHDPI|SDL_WINDOW_RESIZABLE);
+ if(!win){SDL_Quit();return 2;}
+ ren=SDL_CreateRenderer(win,-1,SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);if(!ren)ren=SDL_CreateRenderer(win,-1,SDL_RENDERER_SOFTWARE);
+ if(!ren){SDL_DestroyWindow(win);SDL_Quit();return 3;}
+ SDL_SetRelativeMouseMode(SDL_TRUE);Uint64 last=SDL_GetPerformanceCounter();double freq=(double)SDL_GetPerformanceFrequency();
  while(running){
-  Uint64 current_counter=SDL_GetPerformanceCounter();
-  float delta_time=(float)((current_counter-previous_counter)/counter_frequency);
-  previous_counter=current_counter;
-  if(delta_time>0.05f)delta_time=0.05f;
+  Uint64 now=SDL_GetPerformanceCounter();float dt=(float)((now-last)/freq);last=now;if(dt>0.05f)dt=0.05f;
   SDL_Event e;while(SDL_PollEvent(&e)){
    if(e.type==SDL_QUIT)running=false;
-   if(e.type==SDL_KEYDOWN){SDL_Keycode k=e.key.keysym.sym;
-    if(k==SDLK_ESCAPE){if(screen==PLAY||screen==COMPLETE)screen=MENU;else if(screen==ONLINE_INFO)screen=MULTIPLAYER;else screen=MENU;selected=0;}
-    else if(screen==MENU){if(k==SDLK_UP||k==SDLK_w)selected=(selected+4)%5;if(k==SDLK_DOWN||k==SDLK_s)selected=(selected+1)%5;if(k==SDLK_RETURN){screen=(Screen)(CAMPAIGN+selected);selected=0;}}
-    else if(screen==CAMPAIGN||screen==MULTIPLAYER||screen==COOP||screen==SURVIVAL||screen==EXTRAS){
-     int n=screen==EXTRAS?5:(screen==MULTIPLAYER?4:(screen==CAMPAIGN?3:(screen==COOP?3:2)));
-     if(k==SDLK_UP||k==SDLK_w)selected=(selected+n-1)%n;if(k==SDLK_DOWN||k==SDLK_s)selected=(selected+1)%n;
-     if(k==SDLK_RETURN){
-      if(screen==CAMPAIGN){if(selected==0)start_game(0);else if(selected==2)screen=MENU;}
-      else if(screen==SURVIVAL){if(selected==0)start_game(1);else screen=MENU;}
-      else if(screen==MULTIPLAYER){if(selected<2)screen=ONLINE_INFO;else if(selected==3)screen=MENU;}
-      else if(screen==COOP){if(selected<2)screen=ONLINE_INFO;else screen=MENU;}
-      else if(screen==EXTRAS){if(selected==4)screen=MENU;}
-      selected=0;
-     }
-    }else if(screen==COMPLETE&&k==SDLK_RETURN)start_game(mission);
-    else if(screen==PLAY&&k==SDLK_e&&!scan){float dx=px-640,dy=py-200;if(dx*dx+dy*dy<15000)scan=1;}
+   if(e.type==SDL_MOUSEMOTION&&scene==1)angle+=(float)e.motion.xrel*0.0028f;
+   if(e.type==SDL_KEYDOWN&&!e.key.repeat){SDL_Keycode k=e.key.keysym.sym;
+    if(k==SDLK_ESCAPE){if(scene==1){scene=2;SDL_SetRelativeMouseMode(SDL_FALSE);}else if(scene==2){scene=1;SDL_SetRelativeMouseMode(SDL_TRUE);}else scene=0;}
+    if(scene==0&&k==SDLK_RETURN){reset();SDL_SetRelativeMouseMode(SDL_TRUE);}
+    else if(scene==2&&k==SDLK_RETURN){scene=1;SDL_SetRelativeMouseMode(SDL_TRUE);}
+    else if(scene==1&&k==SDLK_e){for(int i=0;i<3;i++){float x=px-beaconX[i],y=py-beaconY[i];if(!collected[i]&&x*x+y*y<1.8f){collected[i]=true;found++;}}}
+    if(scene==3&&k==SDLK_RETURN){scene=0;}
    }
   }
-  if(screen==PLAY){const Uint8 *keys=SDL_GetKeyboardState(NULL);float v=180.0f*delta_time;if(keys[SDL_SCANCODE_W]||keys[SDL_SCANCODE_UP])py-=v;if(keys[SDL_SCANCODE_S]||keys[SDL_SCANCODE_DOWN])py+=v;if(keys[SDL_SCANCODE_A]||keys[SDL_SCANCODE_LEFT])px-=v;if(keys[SDL_SCANCODE_D]||keys[SDL_SCANCODE_RIGHT])px+=v;if(px<120)px=120;if(px>1160)px=1160;if(py<150)py=150;if(py>610)py=610;}
-  color(7,12,18);SDL_RenderClear(renderer);draw();SDL_RenderPresent(renderer);SDL_Delay(1);
+  if(scene==1){
+   const Uint8*k=SDL_GetKeyboardState(NULL);float speed=2.7f*dt,fx=cosf(angle),fy=sinf(angle),sx=-fy,sy=fx;
+   float mx=0,my=0;if(k[SDL_SCANCODE_W]||k[SDL_SCANCODE_UP]){mx+=fx;my+=fy;}if(k[SDL_SCANCODE_S]||k[SDL_SCANCODE_DOWN]){mx-=fx;my-=fy;}
+   if(k[SDL_SCANCODE_A]){mx+=sx;my+=sy;}if(k[SDL_SCANCODE_D]){mx-=sx;my-=sy;}
+   if(k[SDL_SCANCODE_LEFT])angle-=1.8f*dt;if(k[SDL_SCANCODE_RIGHT])angle+=1.8f*dt;
+   float len=sqrtf(mx*mx+my*my);if(len>0){mx=mx/len*speed;my=my/len*speed;}
+   if(!wall(px+mx,py))px+=mx;if(!wall(px,py+my))py+=my;
+   if(found==3&&px>13.2f&&py>13.2f)scene=3;
+  }
+  SDL_SetRenderDrawColor(ren,5,11,18,255);SDL_RenderClear(ren);
+  if(scene==0)menu_screen();else if(scene==1)draw_world();else if(scene==2){panel();text(60,170,"EXPEDITION PAUSED",(SDL_Color){240,245,238,255});text(60,235,"ENTER - RESUME",(SDL_Color){130,225,215,255});text(60,285,"ESC - MAIN MENU",(SDL_Color){130,225,215,255});}else{panel();text(60,190,"EXPEDITION COMPLETE",(SDL_Color){130,245,190,255});text(60,255,"ALL THREE SIGNAL RELAYS RESTORED",(SDL_Color){235,240,232,255});text(60,330,"ENTER - MAIN MENU",(SDL_Color){130,225,215,255});}
+  SDL_RenderPresent(ren);SDL_Delay(1);
  }
- SDL_DestroyRenderer(renderer);SDL_DestroyWindow(window);SDL_Quit();return 0;
+ SDL_SetRelativeMouseMode(SDL_FALSE);SDL_DestroyRenderer(ren);SDL_DestroyWindow(win);SDL_Quit();return 0;
 }
