@@ -1,0 +1,158 @@
+name: Build BLACKOUT ZERO HOUR for macOS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "macos/**"
+      - ".github/workflows/build-mac.yml"
+      - "README.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: blackout-zero-hour-macos-\${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build macOS (\${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Apple Silicon
+            runner: macos-latest
+            arch: arm64
+            artifact: BLACKOUT-ZERO-HOUR-macOS-arm64
+          - name: Intel
+            runner: macos-15-intel
+            arch: x86_64
+            artifact: BLACKOUT-ZERO-HOUR-macOS-x64
+
+    runs-on: \${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "12.0"
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install SDL2
+        run: |
+          brew update
+          brew install sdl2
+
+      - name: Verify build environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Runner architecture: $(uname -m)"
+          echo "Requested architecture: \${{ matrix.arch }}"
+          echo "SDL2 prefix: $(brew --prefix sdl2)"
+          test -f macos/main3d.c
+          test -x "$(command -v clang)"
+          test -x "$(command -v sdl2-config)"
+
+      - name: Compile native game and create app bundle
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          APP="dist/BLACKOUT ZERO HOUR.app"
+          APP_MACOS="$APP/Contents/MacOS"
+          APP_FRAMEWORKS="$APP/Contents/Frameworks"
+          SDL_PREFIX="$(brew --prefix sdl2)"
+          SDL_LIB="$SDL_PREFIX/lib/libSDL2-2.0.0.dylib"
+          EXECUTABLE="$APP_MACOS/blackout-zero-hour"
+
+          test -f "$SDL_LIB"
+          mkdir -p "$APP_MACOS" "$APP_FRAMEWORKS"
+
+          clang \
+            -arch "\${{ matrix.arch }}" \
+            -mmacosx-version-min="$MACOSX_DEPLOYMENT_TARGET" \
+            -O2 -Wall -Wextra \
+            $(sdl2-config --cflags) \
+            macos/main3d.c \
+            $(sdl2-config --libs) \
+            -framework OpenGL \
+            -lm \
+            -o "$EXECUTABLE"
+
+          cp "$SDL_LIB" "$APP_FRAMEWORKS/"
+          install_name_tool \
+            -id "@executable_path/../Frameworks/libSDL2-2.0.0.dylib" \
+            "$APP_FRAMEWORKS/libSDL2-2.0.0.dylib"
+
+          install_name_tool \
+            -change "$SDL_LIB" \
+            "@executable_path/../Frameworks/libSDL2-2.0.0.dylib" \
+            "$EXECUTABLE"
+
+          cat > "$APP/Contents/Info.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key>
+            <string>blackout-zero-hour</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.blackoutzerohour.game</string>
+            <key>CFBundleName</key>
+            <string>BLACKOUT ZERO HOUR</string>
+            <key>CFBundleDisplayName</key>
+            <string>BLACKOUT: ZERO HOUR</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>CFBundleVersion</key>
+            <string>1.0.0</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0.0</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>12.0</string>
+            <key>NSHighResolutionCapable</key>
+            <true/>
+          </dict>
+          </plist>
+          PLIST
+
+          chmod +x "$EXECUTABLE"
+          file "$EXECUTABLE"
+          lipo -verify_arch "\${{ matrix.arch }}" "$EXECUTABLE"
+          lipo -verify_arch "\${{ matrix.arch }}" "$APP_FRAMEWORKS/libSDL2-2.0.0.dylib"
+          otool -L "$EXECUTABLE"
+
+      - name: Create and verify drag-and-drop DMG
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          APP="dist/BLACKOUT ZERO HOUR.app"
+          DMG_ROOT="dist/dmg-root"
+          DMG_NAME="\${{ matrix.artifact }}.dmg"
+
+          mkdir -p "$DMG_ROOT"
+          ditto "$APP" "$DMG_ROOT/BLACKOUT ZERO HOUR.app"
+          ln -s /Applications "$DMG_ROOT/Applications"
+
+          hdiutil create \
+            -volname "BLACKOUT ZERO HOUR" \
+            -srcfolder "$DMG_ROOT" \
+            -ov \
+            -format UDZO \
+            "$DMG_NAME"
+
+          hdiutil verify "$DMG_NAME"
+          test -s "$DMG_NAME"
+
+      - name: Upload downloadable DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: \${{ matrix.artifact }}-DMG
+          path: \${{ matrix.artifact }}.dmg
+          if-no-files-found: error
+          retention-days: 30
