@@ -15,7 +15,7 @@ jobs:
           mkdir -p dist/BLACKOUT\ ZERO\ HOUR.app/Contents/MacOS
           mkdir -p dist/BLACKOUT\ ZERO\ HOUR.app/Contents/Resources
           SDL_CFLAGS="$(sdl2-config --cflags)"
-          SDL_LIBS="$(sdl2-config --libs)"
+          SDL_LIBS="$(sdl2-config --static-libs)"
           clang -O2 -Wall $SDL_CFLAGS macos/main.c $SDL_LIBS -o "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
           cat > "dist/BLACKOUT ZERO HOUR.app/Contents/Info.plist" <<'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
