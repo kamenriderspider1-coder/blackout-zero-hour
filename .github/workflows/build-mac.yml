@@ -21,7 +21,7 @@ jobs:
       matrix:
         include:
           - name: Apple Silicon
-            runner: macos-latest
+            runner: macos-14
             arch: arm64
             artifact: BLACKOUT-ZERO-HOUR-macOS-arm64
           - name: Intel
