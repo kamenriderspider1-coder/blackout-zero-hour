@@ -59,7 +59,8 @@ static void fireWeapon(void){
 static void reloadWeapon(void){if(ammo<12&&reserveAmmo>0){int n=12-ammo;if(n>reserveAmmo)n=reserveAmmo;ammo+=n;reserveAmmo-=n;}}
 static SDL_Window *window;
 static SDL_GLContext context;
-static GLuint program, vao, vbo;
+static GLuint program, vao, vbo, sphereVAO, sphereVBO;
+static GLsizei sphereVertexCount=0;
 static GLint locVP, locModel, locColor, locLight;
 static int width=1280,height=720;
 static bool running=true;
@@ -109,63 +110,82 @@ static bool initGL(void){
  glGenVertexArrays(1,&vao);glBindVertexArray(vao);glGenBuffers(1,&vbo);glBindBuffer(GL_ARRAY_BUFFER,vbo);glBufferData(GL_ARRAY_BUFFER,sizeof(cube),cube,GL_STATIC_DRAW);
  glEnableVertexAttribArray(0);glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)0);
  glEnableVertexAttribArray(1);glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)(3*sizeof(float)));
+ buildSphereMesh();
  glEnable(GL_DEPTH_TEST);glEnable(GL_CULL_FACE);glCullFace(GL_BACK);glClearColor(0.025f,0.045f,0.065f,1);return true;
 }
-static void drawCube(M4 vp,V3 pos,V3 size,V3 color){M4 model=multiply(translate(pos.x,pos.y,pos.z),scale(size.x,size.y,size.z));glUniformMatrix4fv(locVP,1,GL_FALSE,vp.m);glUniformMatrix4fv(locModel,1,GL_FALSE,model.m);glUniform3f(locColor,color.x,color.y,color.z);glDrawArrays(GL_TRIANGLES,0,36);}
+static void drawCube(M4 vp,V3 pos,V3 size,V3 color){glBindVertexArray(vao);M4 model=multiply(translate(pos.x,pos.y,pos.z),scale(size.x,size.y,size.z));glUniformMatrix4fv(locVP,1,GL_FALSE,vp.m);glUniformMatrix4fv(locModel,1,GL_FALSE,model.m);glUniform3f(locColor,color.x,color.y,color.z);glDrawArrays(GL_TRIANGLES,0,36);}
+
+static void buildSphereMesh(void){
+ const int rings=18,sectors=24;
+ float verts[18*24*6*6];int n=0;
+ for(int r=0;r<rings;r++)for(int c=0;c<sectors;c++){
+  float p0=PI*(float)r/rings,p1=PI*(float)(r+1)/rings;
+  float t0=2*PI*(float)c/sectors,t1=2*PI*(float)(c+1)/sectors;
+  V3 q[4]={v3(sinf(p0)*cosf(t0),cosf(p0),sinf(p0)*sinf(t0)),v3(sinf(p1)*cosf(t0),cosf(p1),sinf(p1)*sinf(t0)),v3(sinf(p1)*cosf(t1),cosf(p1),sinf(p1)*sinf(t1)),v3(sinf(p0)*cosf(t1),cosf(p0),sinf(p0)*sinf(t1))};
+  int ix[6]={0,1,2,0,2,3};
+  for(int j=0;j<6;j++){V3 p=q[ix[j]];verts[n++]=p.x*.5f;verts[n++]=p.y*.5f;verts[n++]=p.z*.5f;verts[n++]=p.x;verts[n++]=p.y;verts[n++]=p.z;}
+ }
+ sphereVertexCount=n/6;
+ glGenVertexArrays(1,&sphereVAO);glBindVertexArray(sphereVAO);glGenBuffers(1,&sphereVBO);glBindBuffer(GL_ARRAY_BUFFER,sphereVBO);glBufferData(GL_ARRAY_BUFFER,n*sizeof(float),verts,GL_STATIC_DRAW);
+ glEnableVertexAttribArray(0);glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)0);
+ glEnableVertexAttribArray(1);glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)(3*sizeof(float)));
+ glBindVertexArray(vao);
+}
+static void drawEllipsoid(M4 vp,V3 pos,V3 size,V3 color){
+ M4 model=multiply(translate(pos.x,pos.y,pos.z),scale(size.x,size.y,size.z));
+ glBindVertexArray(sphereVAO);glUniformMatrix4fv(locVP,1,GL_FALSE,vp.m);glUniformMatrix4fv(locModel,1,GL_FALSE,model.m);glUniform3f(locColor,color.x,color.y,color.z);glDrawArrays(GL_TRIANGLES,0,sphereVertexCount);glBindVertexArray(vao);
+}
+
 static void buildWorld(void){objectCount=0;
  // Floors and wall blocks form a true polygonal 3D level.
  for(int z=0;z<MAP_H;z++)for(int x=0;x<MAP_W;x++)if(mapData[z][x]=='#'&&objectCount<MAX_OBJECTS){objects[objectCount++]=(Object){x+.5f,1.0f,z+.5f,0.19f,0.34f,0.39f};}
 }
 
-static void drawRiderModel(M4 vp,V3 base,float scaleFactor,V3 armor,V3 accent){
- // Stylized, fully 3D Rider-inspired suit assembled from lit mesh parts.
- drawCube(vp,add(base,v3(0,1.48f*scaleFactor,0)),v3(.62f,.78f,.34f),armor);
- drawCube(vp,add(base,v3(0,1.50f*scaleFactor,.19f)),v3(.32f,.30f,.075f),accent);
- drawCube(vp,add(base,v3(0,1.05f*scaleFactor,0)),v3(.52f,.20f,.36f),accent);
- drawCube(vp,add(base,v3(0,2.02f*scaleFactor,0)),v3(.48f,.48f,.42f),armor);
- drawCube(vp,add(base,v3(0,2.05f*scaleFactor,.22f)),v3(.34f,.12f,.055f),accent);
- drawCube(vp,add(base,v3(-.13f,2.05f*scaleFactor,.255f)),v3(.075f,.07f,.025f),v3(.95f,.95f,.65f));
- drawCube(vp,add(base,v3(.13f,2.05f*scaleFactor,.255f)),v3(.075f,.07f,.025f),v3(.95f,.95f,.65f));
- drawCube(vp,add(base,v3(-.43f,1.53f*scaleFactor,0)),v3(.28f,.70f,.30f),armor);
- drawCube(vp,add(base,v3(.43f,1.53f*scaleFactor,0)),v3(.28f,.70f,.30f),armor);
- drawCube(vp,add(base,v3(-.43f,1.15f*scaleFactor,.015f)),v3(.25f,.22f,.27f),accent);
- drawCube(vp,add(base,v3(.43f,1.15f*scaleFactor,.015f)),v3(.25f,.22f,.27f),accent);
- drawCube(vp,add(base,v3(-.17f,.63f*scaleFactor,0)),v3(.28f,.78f,.31f),armor);
- drawCube(vp,add(base,v3(.17f,.63f*scaleFactor,0)),v3(.28f,.78f,.31f),armor);
- drawCube(vp,add(base,v3(-.17f,.19f*scaleFactor,.08f)),v3(.32f,.20f,.46f),accent);
- drawCube(vp,add(base,v3(.17f,.19f*scaleFactor,.08f)),v3(.32f,.20f,.46f),accent);
+static void drawRiderModel(M4 vp,V3 base,float k,V3 armor,V3 accent){
+ // Smooth, rounded armored silhouette built from a reusable UV sphere mesh.
+ drawEllipsoid(vp,add(base,v3(0,1.42f*k,0)),v3(.70f*k,.82f*k,.42f*k),armor);
+ drawEllipsoid(vp,add(base,v3(0,1.02f*k,0)),v3(.55f*k,.24f*k,.39f*k),accent);
+ drawEllipsoid(vp,add(base,v3(0,2.03f*k,0)),v3(.48f*k,.50f*k,.43f*k),armor);
+ drawEllipsoid(vp,add(base,v3(-.43f*k,1.52f*k,0)),v3(.30f*k,.68f*k,.31f*k),armor);
+ drawEllipsoid(vp,add(base,v3(.43f*k,1.52f*k,0)),v3(.30f*k,.68f*k,.31f*k),armor);
+ drawEllipsoid(vp,add(base,v3(-.17f*k,.61f*k,0)),v3(.29f*k,.72f*k,.31f*k),armor);
+ drawEllipsoid(vp,add(base,v3(.17f*k,.61f*k,0)),v3(.29f*k,.72f*k,.31f*k),armor);
+ drawEllipsoid(vp,add(base,v3(-.17f*k,.16f*k,.07f*k)),v3(.32f*k,.19f*k,.43f*k),accent);
+ drawEllipsoid(vp,add(base,v3(.17f*k,.16f*k,.07f*k)),v3(.32f*k,.19f*k,.43f*k),accent);
+ drawEllipsoid(vp,add(base,v3(-.43f*k,1.13f*k,.02f)),v3(.25f*k,.22f*k,.27f*k),accent);
+ drawEllipsoid(vp,add(base,v3(.43f*k,1.13f*k,.02f)),v3(.25f*k,.22f*k,.27f*k),accent);
 }
-
 static void drawZeroOneModel(M4 vp,V3 base,float k){
- // Kamen Rider Zero-One: white/silver suit, red accents, green compound eyes.
- V3 white=v3(.82f,.86f,.88f),silver=v3(.48f,.55f,.60f),red=v3(.82f,.08f,.12f);
- V3 green=v3(.12f,.95f,.30f),black=v3(.035f,.045f,.055f),gold=v3(.95f,.68f,.12f);
- #define ZP(x,y,z) add(base,v3((x)*k,(y)*k,(z)*k))
- drawCube(vp,ZP(0,1.48f,0),v3(.66f*k,.78f*k,.38f*k),white);
- drawCube(vp,ZP(0,1.48f,.205f),v3(.43f*k,.50f*k,.055f*k),silver);
- drawCube(vp,ZP(0,1.02f,0),v3(.56f*k,.22f*k,.40f*k),black);
- drawCube(vp,ZP(0,1.05f,.225f),v3(.28f*k,.25f*k,.07f*k),gold);
- drawCube(vp,ZP(0,2.02f,0),v3(.50f*k,.48f*k,.43f*k),white);
- drawCube(vp,ZP(0,2.02f,.225f),v3(.40f*k,.22f*k,.06f*k),black);
- drawCube(vp,ZP(-.14f,2.02f,.27f),v3(.17f*k,.16f*k,.035f*k),green);
- drawCube(vp,ZP(.14f,2.02f,.27f),v3(.17f*k,.16f*k,.035f*k),green);
- drawCube(vp,ZP(-.25f,2.34f,.02f),v3(.09f*k,.40f*k,.09f*k),red);
- drawCube(vp,ZP(.25f,2.34f,.02f),v3(.09f*k,.40f*k,.09f*k),red);
- drawCube(vp,ZP(-.36f,2.45f,.02f),v3(.08f*k,.34f*k,.08f*k),gold);
- drawCube(vp,ZP(.36f,2.45f,.02f),v3(.08f*k,.34f*k,.08f*k),gold);
- drawCube(vp,ZP(-.44f,1.54f,0),v3(.27f*k,.69f*k,.31f*k),white);
- drawCube(vp,ZP(.44f,1.54f,0),v3(.27f*k,.69f*k,.31f*k),white);
- drawCube(vp,ZP(-.44f,1.15f,.02f),v3(.25f*k,.22f*k,.28f*k),red);
- drawCube(vp,ZP(.44f,1.15f,.02f),v3(.25f*k,.22f*k,.28f*k),red);
- drawCube(vp,ZP(-.17f,.62f,0),v3(.29f*k,.78f*k,.33f*k),white);
- drawCube(vp,ZP(.17f,.62f,0),v3(.29f*k,.78f*k,.33f*k),white);
- drawCube(vp,ZP(-.17f,.18f,.08f),v3(.33f*k,.20f*k,.45f*k),red);
- drawCube(vp,ZP(.17f,.18f,.08f),v3(.33f*k,.20f*k,.45f*k),red);
- drawCube(vp,ZP(-.17f,1.68f,.205f),v3(.09f*k,.46f*k,.035f*k),red);
- drawCube(vp,ZP(.17f,1.68f,.205f),v3(.09f*k,.46f*k,.035f*k),red);
- #undef ZP
+ // Rounded Zero-One-inspired armor, compound eyes, horn details and glowing belt.
+ V3 white=v3(.82f,.87f,.90f),silver=v3(.46f,.54f,.61f),red=v3(.88f,.045f,.10f);
+ V3 green=v3(.12f,1.0f,.28f),black=v3(.025f,.035f,.05f),gold=v3(1.0f,.68f,.08f);
+ #define ZS(x,y,z) add(base,v3((x)*k,(y)*k,(z)*k))
+ #define ZE(x,y,z,a,b,c,col) drawEllipsoid(vp,ZS(x,y,z),v3((a)*k,(b)*k,(c)*k),col)
+ ZE(0,1.43f,0,.70f,.83f,.43f,white);
+ ZE(0,1.48f,.20f,.43f,.48f,.09f,silver);
+ ZE(0,1.03f,0,.58f,.24f,.42f,black);
+ ZE(0,1.05f,.25f,.28f,.22f,.08f,gold);
+ ZE(0,2.03f,0,.50f,.49f,.44f,white);
+ ZE(0,2.02f,.20f,.42f,.25f,.20f,black);
+ ZE(-.145f,2.04f,.355f,.17f,.16f,.055f,green);
+ ZE(.145f,2.04f,.355f,.17f,.16f,.055f,green);
+ ZE(-.27f,2.34f,.02f,.075f,.27f,.075f,red);
+ ZE(.27f,2.34f,.02f,.075f,.27f,.075f,red);
+ ZE(-.38f,2.46f,.02f,.055f,.25f,.055f,gold);
+ ZE(.38f,2.46f,.02f,.055f,.25f,.055f,gold);
+ ZE(-.44f,1.53f,0,.29f,.68f,.31f,white);
+ ZE(.44f,1.53f,0,.29f,.68f,.31f,white);
+ ZE(-.44f,1.14f,.02f,.25f,.23f,.27f,red);
+ ZE(.44f,1.14f,.02f,.25f,.23f,.27f,red);
+ ZE(-.17f,.62f,0,.30f,.75f,.32f,white);
+ ZE(.17f,.62f,0,.30f,.75f,.32f,white);
+ ZE(-.17f,.17f,.08f,.33f,.20f,.44f,red);
+ ZE(.17f,.17f,.08f,.33f,.20f,.44f,red);
+ ZE(-.17f,1.68f,.24f,.065f,.42f,.04f,red);
+ ZE(.17f,1.68f,.24f,.065f,.42f,.04f,red);
+ #undef ZE
+ #undef ZS
 }
-
 static void drawCrate(M4 vp,V3 p,float size){
  drawCube(vp,p,v3(size,size,size),v3(.31f,.25f,.17f));
  drawCube(vp,add(p,v3(0,0,size*.51f)),v3(size*.82f,size*.82f,.035f),v3(.48f,.38f,.24f));
