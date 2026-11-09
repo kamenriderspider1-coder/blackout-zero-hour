@@ -31,3 +31,9 @@ Launch it from Homebrew Menu on a Switch running Atmosphère.
 - Plus: quit
 
 All names, maps, code, and planned game content are original. This is an unofficial homebrew project and is not affiliated with or endorsed by Nintendo or any commercial game publisher.
+
+## ChatGPT development link
+
+This repository is connected to the BLACKOUT development conversation. You can describe a feature or bug in that chat, and ChatGPT can update the actual source files here through the authorized GitHub connection. Each accepted change is committed to this repository and can trigger a fresh Switch build through GitHub Actions.
+
+This is a developer-to-repository bridge, not a live ChatGPT service inside the Switch game. After a successful build, download the `BLACKOUT-ZERO-HOUR-NRO` artifact from the Actions run and install it on the Switch. See [the full workflow](docs/CHATGPT_DEV_LINK.md).
