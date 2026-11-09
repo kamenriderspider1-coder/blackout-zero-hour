@@ -16,9 +16,11 @@ The goal is a cinematic, mission-based shooter with responsive first-person cont
 
 ## Current implementation status
 
-The current native prototype in `macos/main3d.c` is an early 3D blockout. It has an SDL2 + OpenGL 3.2 window, a first-person camera, basic movement and collision, simple polygonal geometry, and placeholder relay/extraction interactions.
+The current native prototype in `macos/main3d.c` is an early playable 3D mission prototype built with SDL2 and OpenGL 3.2. It includes a first-person camera, keyboard and controller movement, mouse look, basic wall collision, sprinting, 3D environment props, relay interactions, extraction logic, and a stylized Kamen Rider Zero-One suit model at the extraction area.
 
-**Important:** This prototype is not yet the intended FPS. It does not yet have a complete combat loop, weapon systems, hostile AI, campaign missions, cinematic presentation, or multiplayer. Those are development targets, not completed features. The next development work must replace the exploration-style relay loop with an actual FPS mission and combat loop.
+**Current playable objective:** Explore the facility, activate three relay stations, then reach the extraction area. The window title reports relay progress and whether the player is near an objective. The controller's A button can interact with relays and extraction.
+
+**Important:** This is still an early prototype, not the completed FPS described above. It does not yet include player weapons, shooting, aiming, reloading, enemy AI, damage/health, a combat HUD, animated character rigs, a multi-mission campaign, cutscenes, or multiplayer. The Zero-One model is currently assembled from simple 3D shapes and is displayed at the extraction area, not yet a selectable playable character. These are development targets, not completed features.
 
 ## Controls
 
@@ -27,8 +29,8 @@ The current native prototype in `macos/main3d.c` is an early 3D blockout. It has
 - W, A, S, D: move
 - Mouse: look around
 - Left / Right arrows: turn
-- E: interact with a nearby placeholder relay
-- Escape: pause / resume
+- E: activate a nearby relay; after all three, interact at extraction
+- Shift: sprint\n- Escape: pause / resume
 
 ### Intended FPS controls
 - W, A, S, D: move
@@ -83,12 +85,10 @@ No real-money purchases are available in the current build. The credits economy 
 <!-- MACOS-DOWNLOADS-START -->
 ## Download for macOS
 
-Both installers below were generated and verified by the GitHub Actions release workflow.
+The current release downloads are **not being presented as the completed game**. The next stable DMGs will be published only after the full game is implemented, tested on both Apple Silicon and Intel Macs, and the installers are verified.
 
-- [Apple Silicon (M1/M2/M3/M4)](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/download/v1.0.0/BLACKOUT-ZERO-HOUR-macOS-arm64.dmg)
-- [Intel Mac](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/download/v1.0.0/BLACKOUT-ZERO-HOUR-macOS-x64.dmg)
-
-See the [full release notes and files](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/tag/v1.0.0).
+- [Check the GitHub Actions build status](https://github.com/kamenriderspider1-coder/blackout-zero-hour/actions)
+- [View releases](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases)
 <!-- MACOS-DOWNLOADS-END -->
 ## Build
 
@@ -100,7 +100,7 @@ Connect a Bluetooth game controller to your Mac before launching the game. The g
 
 - Left stick: move
 - Right stick: look
-- A / Cross: interact with a nearby relay
+- A / Cross: interact with a nearby relay or extraction
 - Start / Options: pause
 - F1: open or close controller settings
 - In controller settings, press 1 to toggle inverted look, 2 to swap the movement and look sticks, 3 to cycle look sensitivity, and 4 to cycle stick deadzone
