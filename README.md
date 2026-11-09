@@ -85,10 +85,12 @@ No real-money purchases are available in the current build. The credits economy 
 <!-- MACOS-DOWNLOADS-START -->
 ## Download for macOS
 
-The current release downloads are **not being presented as the completed game**. The next stable DMGs will be published only after the full game is implemented, tested on both Apple Silicon and Intel Macs, and the installers are verified.
+Both installers below were generated and verified by the GitHub Actions release workflow.
 
-- [Check the GitHub Actions build status](https://github.com/kamenriderspider1-coder/blackout-zero-hour/actions)
-- [View releases](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases)
+- [Apple Silicon (M1/M2/M3/M4)](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/download/v1.0.0/BLACKOUT-ZERO-HOUR-macOS-arm64.dmg)
+- [Intel Mac](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/download/v1.0.0/BLACKOUT-ZERO-HOUR-macOS-x64.dmg)
+
+See the [full release notes and files](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/tag/v1.0.0).
 <!-- MACOS-DOWNLOADS-END -->
 ## Build
 
