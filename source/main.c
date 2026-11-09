@@ -16,7 +16,8 @@ typedef struct { float x,y,z; } Cam;
 
 static uint32_t *fb;
 static float *zbuf;
-static unsigned W,H;
+static unsigned W,H,STRIDE;
+static Framebuffer g_framebuffer;
 static Cam cam = {0.0f,0.0f,0.0f};
 static float yaw = 0.0f;
 static int screen = 0;
@@ -33,7 +34,7 @@ static V3 norm(V3 a){ float l=sqrtf(dot(a,a)); return l>0.0001f?v3(a.x/l,a.y/l,a
 static uint32_t rgb(int r,int g,int b){ return 0xff000000u|((uint32_t)(b&255)<<16)|((uint32_t)(g&255)<<8)|(uint32_t)(r&255); }
 
 static void pixel(int x,int y,uint32_t c){
- if(x>=0&&y>=0&&x<(int)W&&y<(int)H) fb[(size_t)y*W+x]=c;
+ if(x>=0&&y>=0&&x<(int)W&&y<(int)H) fb[(size_t)y*STRIDE+x]=c;
 }
 static void rect(int x,int y,int w,int h,uint32_t c){
  int x2=x+w,y2=y+h;
@@ -174,12 +175,14 @@ static void panel(void){
  }
 }
 int main(void){
- gfxInitDefault();
+ viInit(ViServiceType_Default);
  W=1280;H=720;
- fb=(uint32_t*)gfxGetFramebuffer(&W,&H);
+ framebufferCreate(&g_framebuffer,nwindowGetDefault(),W,H,PIXEL_FORMAT_RGBA_8888,2);
+ fb=(uint32_t*)framebufferAcquire(&g_framebuffer,&STRIDE);
+ STRIDE/=sizeof(uint32_t);
  zbuf=(float*)malloc((size_t)W*H*sizeof(float));
- if(!fb||!zbuf){gfxExit();return 1;}
- padConfigureInput(1,HidNpadStyleSet_NpadStandard|HidNpadStyleSet_NpadJoyDual);
+ if(!fb||!zbuf){framebufferClose(&g_framebuffer);viExit();return 1;}
+ padConfigureInput(1,HidNpadStyleSet_NpadFullKey);
  PadState pad;padInitializeDefault(&pad);
  while(appletMainLoop()){
   padUpdate(&pad);u64 down=padGetButtonsDown(&pad);
@@ -212,9 +215,10 @@ int main(void){
    if(down&HidNpadButton_Right){cam.x+=cosf(yaw)*0.18f;cam.z-=sinf(yaw)*0.18f;}
    mission_time++;
   }
-  fb=(uint32_t*)gfxGetFramebuffer(&W,&H);
+  fb=(uint32_t*)framebufferAcquire(&g_framebuffer,&STRIDE);
+  STRIDE/=sizeof(uint32_t);
   if(screen==3)draw_world();else panel();
-  gfxFlushBuffers();gfxSwapBuffers();gfxWaitForVsync();
+  framebufferEnd(&g_framebuffer);
  }
- free(zbuf);gfxExit();return 0;
+ free(zbuf);framebufferClose(&g_framebuffer);viExit();return 0;
 }
