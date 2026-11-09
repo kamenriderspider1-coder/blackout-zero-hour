@@ -184,6 +184,37 @@ static void drawZeroOneModel(M4 vp,V3 base,float k){
  ZE(.17f,.17f,.08f,.33f,.20f,.44f,red);
  ZE(-.17f,1.68f,.24f,.065f,.42f,.04f,red);
  ZE(.17f,1.68f,.24f,.065f,.42f,.04f,red);
+ // Layered Zero-One-inspired chest plates and segmented armor details.
+ ZE(0,1.62f,.34f,.29f,.39f,.12f,green);
+ ZE(-.34f,1.78f,.20f,.25f,.29f,.18f,black);
+ ZE(.34f,1.78f,.20f,.25f,.29f,.18f,black);
+ ZE(-.40f,1.89f,.05f,.32f,.22f,.32f,gold);
+ ZE(.40f,1.89f,.05f,.32f,.22f,.32f,gold);
+ ZE(-.48f,1.52f,.05f,.22f,.20f,.25f,red);
+ ZE(.48f,1.52f,.05f,.22f,.20f,.25f,red);
+ // Forearm gauntlets, gloves, thigh plates, and shin armor.
+ ZE(-.48f,1.05f,.10f,.22f,.31f,.25f,black);
+ ZE(.48f,1.05f,.10f,.22f,.31f,.25f,black);
+ ZE(-.18f,.86f,.20f,.22f,.31f,.16f,silver);
+ ZE(.18f,.86f,.20f,.22f,.31f,.16f,silver);
+ ZE(-.18f,.43f,.20f,.22f,.30f,.16f,black);
+ ZE(.18f,.43f,.20f,.22f,.22f,.16f,black);
+ ZE(-.18f,.35f,.30f,.12f,.27f,.08f,green);
+ ZE(.18f,.35f,.30f,.12f,.27f,.08f,green);
+ ZE(-.17f,.08f,.30f,.29f,.12f,.28f,black);
+ ZE(.17f,.08f,.30f,.29f,.12f,.28f,black);
+ // Belt buckle with a bright central Progrise-inspired emblem.
+ ZE(0,1.04f,.38f,.34f,.24f,.12f,silver);
+ ZE(0,1.04f,.49f,.18f,.15f,.06f,gold);
+ ZE(0,1.04f,.55f,.09f,.10f,.035f,green);
+ // Helmet crest, cheek guards, and luminous compound-eye highlights.
+ ZE(-.31f,2.10f,.31f,.12f,.20f,.09f,red);
+ ZE(.31f,2.10f,.31f,.12f,.20f,.09f,red);
+ ZE(0,2.26f,.29f,.09f,.24f,.09f,gold);
+ ZE(-.12f,2.39f,.08f,.055f,.25f,.06f,gold);
+ ZE(.12f,2.39f,.08f,.055f,.25f,.06f,gold);
+ ZE(-.145f,2.04f,.405f,.09f,.09f,.025f,v3(1.0f,.16f,.22f));
+ ZE(.145f,2.04f,.405f,.09f,.09f,.025f,v3(1.0f,.16f,.22f));
  #undef ZE
  #undef ZS
 }
