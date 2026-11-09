@@ -158,9 +158,23 @@ jobs:
           path: ${{ matrix.artifact }}.dmg
           if-no-files-found: error
           retention-days: 30
-          permissions:
-  contents: write
-        - name: Upload DMG to GitHub Release
+
+
+  publish-release:
+    name: Publish macOS DMGs to GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download both macOS DMGs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-DMG"
+          path: dist
+          merge-multiple: true
+
+      - name: Attach DMGs to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.0
