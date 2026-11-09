@@ -36,6 +36,25 @@ typedef struct { float x,y,z; } V3;
 typedef struct { float m[16]; } M4;
 typedef struct { float x,y,z,r,g,b; } Object;
 
+typedef struct { float x,z; int hp; bool active; } Enemy;
+static Enemy enemies[4]={{8.5f,2.5f,3,true},{12.5f,6.5f,3,true},{5.5f,10.5f,3,true},{11.5f,11.5f,3,true}};
+static int ammo=12, reserveAmmo=48, score=0;
+static float damageFlash=0.0f;
+static void resetCombat(void){ammo=12;reserveAmmo=48;score=0;damageFlash=0;Enemy initial[4]={{8.5f,2.5f,3,true},{12.5f,6.5f,3,true},{5.5f,10.5f,3,true},{11.5f,11.5f,3,true}};memcpy(enemies,initial,sizeof(initial));}
+static void fireWeapon(void){
+ if(!started||paused||gameComplete||ammo<=0)return;
+ ammo--;
+ float fx=cosf(pitch)*cosf(yaw),fz=cosf(pitch)*sinf(yaw);
+ int target=-1;float best=18.0f;
+ for(int i=0;i<4;i++)if(enemies[i].active){
+  float dx=enemies[i].x-px,dz=enemies[i].z-pz,dist=sqrtf(dx*dx+dz*dz);
+  if(dist>best||dist<0.1f)continue;
+  float alignment=(dx*fx+dz*fz)/dist;
+  if(alignment>0.975f){best=dist;target=i;}
+ }
+ if(target>=0){enemies[target].hp--;if(enemies[target].hp<=0){enemies[target].active=false;score+=100;}}
+}
+static void reloadWeapon(void){if(ammo<12&&reserveAmmo>0){int n=12-ammo;if(n>reserveAmmo)n=reserveAmmo;ammo+=n;reserveAmmo-=n;}}
 static SDL_Window *window;
 static SDL_GLContext context;
 static GLuint program, vao, vbo;
@@ -165,6 +184,18 @@ static void render3D(void){
  drawCrate(vp,v3(5.5f,.55f,4.5f),1.0f);drawCrate(vp,v3(11.5f,.55f,8.5f),1.0f);drawCrate(vp,v3(6.5f,.55f,12.5f),1.0f);
  // Relay stations now have a readable 3D housing, status band, and top beacon.
  for(int i=0;i<3;i++)if(!scanned[i]){drawCube(vp,v3(relays[i].x,.85f,relays[i].z),v3(.72f,1.7f,.62f),v3(.08f,.26f,.30f));drawCube(vp,v3(relays[i].x,1.0f,relays[i].z+.33f),v3(.42f,.48f,.06f),v3(.08f,.85f,.78f));drawCube(vp,v3(relays[i].x,1.8f,relays[i].z),v3(.78f,.12f,.78f),v3(.55f,1.0f,.88f));}
+ // Training-zone security drones: stylized targets for the FPS combat loop.
+ for(int i=0;i<4;i++)if(enemies[i].active){
+  V3 p=v3(enemies[i].x,.92f,enemies[i].z);
+  drawCube(vp,p,v3(.62f,1.45f,.48f),v3(.30f,.36f,.42f));
+  drawCube(vp,add(p,v3(0,.62f,.03f)),v3(.42f,.22f,.52f),v3(.85f,.12f,.10f));
+  drawCube(vp,add(p,v3(0,.10f,.27f)),v3(.28f,.12f,.05f),v3(.10f,.85f,.82f));
+ }
+ // First-person energy carbine model attached to the camera.
+ V3 right=v3(-sinf(yaw),0,cosf(yaw));
+ V3 weapon=add(eye,add(mul(forward,.62f),add(mul(right,.34f),v3(0,-.28f,0))));
+ drawCube(vp,weapon,v3(.22f,.20f,.72f),v3(.12f,.16f,.19f));
+ drawCube(vp,add(weapon,v3(0,.13f,-.12f)),v3(.12f,.08f,.38f),v3(.08f,.78f,.72f));
  // Kamen Rider Zero-One suit display marks the extraction zone.
  if(found==3)drawZeroOneModel(vp,v3(13.5f,0,13.5f),.85f);
  if(found==3)drawCube(vp,v3(13.5f,1.0f,13.5f),v3(1.6f,2.0f,.25f),v3(.12f,.9f,.48f));
@@ -177,7 +208,7 @@ static void saveControls(void){if(!settingsPath[0])return;FILE*f=fopen(settingsP
 static void loadControls(void){char*base=SDL_GetPrefPath("BlackoutZeroHour","BLACKOUT ZERO HOUR");if(base){snprintf(settingsPath,sizeof(settingsPath),"%scontrols.cfg",base);SDL_free(base);}FILE*f=fopen(settingsPath,"r");if(f){int a,b,c,d;if(fscanf(f,"%d %d %d %d",&a,&b,&c,&d)==4){invertLookY=a!=0;swapSticks=b!=0;sensitivityLevel=c<0?0:(c>3?3:c);deadzoneLevel=d<0?0:(d>2?2:d);}fclose(f);}updateTitle();}
 static void openController(int i){if(controller){SDL_GameControllerClose(controller);controller=NULL;}if(i>=0&&SDL_IsGameController(i))controller=SDL_GameControllerOpen(i);}
 static float getAxis(SDL_GameControllerAxis a){if(!controller)return 0;float v=(float)SDL_GameControllerGetAxis(controller,a)/32767.0f;return fabsf(v)<(float)deadzones[deadzoneLevel]/32767.0f?0:v;}
-static void resetGame(void){px=2.5f;pz=2.5f;yaw=.15f;pitch=0;found=0;gameComplete=false;memset(scanned,0,sizeof(scanned));started=true;paused=false;controlsMenu=false;SDL_SetRelativeMouseMode(controller?SDL_FALSE:SDL_TRUE);SDL_SetWindowTitle(window,"BLACKOUT: ZERO HOUR | Zero-One Mission | Find 3 relays");}
+static void resetGame(void){resetCombat();px=2.5f;pz=2.5f;yaw=.15f;pitch=0;found=0;gameComplete=false;memset(scanned,0,sizeof(scanned));started=true;paused=false;controlsMenu=false;SDL_SetRelativeMouseMode(controller?SDL_FALSE:SDL_TRUE);SDL_SetWindowTitle(window,"BLACKOUT: ZERO HOUR | Zero-One Mission | Find 3 relays");}
 int main(int argc,char **argv){(void)argc;(void)argv;
  if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER)!=0){fprintf(stderr,"%s\n",SDL_GetError());return 1;}
  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,3);SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,2);SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE);SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,24);
@@ -189,9 +220,11 @@ int main(int argc,char **argv){(void)argc;(void)argv;
   SDL_Event e;while(SDL_PollEvent(&e)){if(e.type==SDL_QUIT)running=false;
    if(e.type==SDL_CONTROLLERDEVICEADDED&&!controller)openController(e.cdevice.which);
    if(e.type==SDL_CONTROLLERDEVICEREMOVED&&controller&&SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(controller))==e.cdevice.which)openController(-1);if(e.type==SDL_WINDOWEVENT&&e.window.event==SDL_WINDOWEVENT_SIZE_CHANGED){width=e.window.data1;height=e.window.data2;}
+   if(e.type==SDL_MOUSEBUTTONDOWN&&e.button.button==SDL_BUTTON_LEFT&&started&&!paused)fireWeapon();
    if(e.type==SDL_MOUSEMOTION&&started&&!paused){yaw+=(float)e.motion.xrel*.0025f;pitch-=(float)e.motion.yrel*.0022f;if(pitch>1.25f)pitch=1.25f;if(pitch< -1.25f)pitch=-1.25f;}
    if(e.type==SDL_KEYDOWN&&!e.key.repeat){SDL_Keycode k=e.key.keysym.sym;
     if(k==SDLK_r){resetGame();}
+    else if(k==SDLK_f&&started&&!paused)reloadWeapon();
     else if(k==SDLK_F1){controlsMenu=!controlsMenu;paused=controlsMenu;SDL_SetRelativeMouseMode(controller?SDL_FALSE:(started&&!paused?SDL_TRUE:SDL_FALSE));}
     else if(controlsMenu&&(k==SDLK_1||k==SDLK_2||k==SDLK_3||k==SDLK_4)){if(k==SDLK_1)invertLookY=!invertLookY;if(k==SDLK_2)swapSticks=!swapSticks;if(k==SDLK_3)sensitivityLevel=(sensitivityLevel+1)%4;if(k==SDLK_4)deadzoneLevel=(deadzoneLevel+1)%3;saveControls();updateTitle();}
     else if(k==SDLK_ESCAPE){if(controlsMenu){controlsMenu=false;paused=false;}else paused=!paused;SDL_SetRelativeMouseMode(controller?SDL_FALSE:(started&&!paused?SDL_TRUE:SDL_FALSE));}
@@ -203,7 +236,7 @@ int main(int argc,char **argv){(void)argc;(void)argv;
     float l=sqrtf(mx*mx+mz*mz);if(l>1){mx/=l;mz/=l;}if(l>0){float speed=k[SDL_SCANCODE_LSHIFT]?4.4f:3.0f;mx*=speed*dt;mz*=speed*dt;if(!wall(px+mx,pz))px+=mx;if(!wall(px,pz+mz))pz+=mz;}if(k[SDL_SCANCODE_LEFT])yaw-=1.8f*dt;if(k[SDL_SCANCODE_RIGHT])yaw+=1.8f*dt;if(pitch>1.25f)pitch=1.25f;if(pitch< -1.25f)pitch=-1.25f;}
   render3D();
   if(!started||paused||found==3){glDisable(GL_DEPTH_TEST);glUseProgram(program);M4 ortho=identity();ortho.m[0]=2.0f/(float)width;ortho.m[5]=-2.0f/(float)height;ortho.m[10]=-.01f;ortho.m[12]=-1;ortho.m[13]=1;glUniform3f(locLight,0,10,0);if(!started){drawCube(ortho,v3(width*.5f,height*.28f,0),v3(440,55,1),v3(.04f,.48f,.48f));drawCube(ortho,v3(width*.5f,height*.48f,0),v3(570,18,1),v3(.75f,.9f,.88f));}else if(paused){drawCube(ortho,v3(width*.5f,height*.42f,0),v3(300,45,1),v3(.15f,.5f,.5f));}else{drawCube(ortho,v3(width*.5f,height*.42f,0),v3(360,50,1),v3(.12f,.8f,.42f));}glEnable(GL_DEPTH_TEST);}
-  if(started&&!gameComplete){char title[256];if(paused)snprintf(title,sizeof(title),"BLACKOUT: ZERO HOUR | PAUSED | ESC resume | R restart");else if(found<3){int near=-1;float best=2.2f;for(int i=0;i<3;i++){float dx=px-relays[i].x,dz=pz-relays[i].z,d=dx*dx+dz*dz;if(!scanned[i]&&d<best){best=d;near=i;}}snprintf(title,sizeof(title),"ZERO-ONE | Relays %d/3 | %s | E interact | Shift sprint | ESC pause",found,near>=0?"Relay in range":"Explore facility");}else{float dx=px-13.5f,dz=pz-13.5f;snprintf(title,sizeof(title),"ZERO-ONE | All relays secured | Extraction %s | E extract",dx*dx+dz*dz<3.0f?"in range":"at far end");}SDL_SetWindowTitle(window,title);}SDL_GL_SwapWindow(window);SDL_Delay(1);
+  if(started&&!gameComplete){char title[256];if(paused)snprintf(title,sizeof(title),"BLACKOUT: ZERO HOUR | PAUSED | ESC resume | R restart");else if(found<3){int near=-1;float best=2.2f;for(int i=0;i<3;i++){float dx=px-relays[i].x,dz=pz-relays[i].z,d=dx*dx+dz*dz;if(!scanned[i]&&d<best){best=d;near=i;}}snprintf(title,sizeof(title),"ZERO-ONE | Relays %d/3 | Drones %d/4 | Ammo %d/%d | Score %d | %s | E interact | Click fire | F reload",found,(enemies[0].active+enemies[1].active+enemies[2].active+enemies[3].active),ammo,reserveAmmo,score,near>=0?"Relay in range":"Explore facility");}else{float dx=px-13.5f,dz=pz-13.5f;snprintf(title,sizeof(title),"ZERO-ONE | All relays secured | Extraction %s | E extract",dx*dx+dz*dz<3.0f?"in range":"at far end");}SDL_SetWindowTitle(window,title);}SDL_GL_SwapWindow(window);SDL_Delay(1);
  }
  SDL_SetRelativeMouseMode(SDL_FALSE);if(controller)SDL_GameControllerClose(controller);glDeleteBuffers(1,&vbo);glDeleteVertexArrays(1,&vao);glDeleteProgram(program);SDL_GL_DeleteContext(context);SDL_DestroyWindow(window);SDL_Quit();return 0;
 }
