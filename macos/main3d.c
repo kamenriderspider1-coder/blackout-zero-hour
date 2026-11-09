@@ -37,6 +37,8 @@ typedef struct { float m[16]; } M4;
 typedef struct { float x,y,z,r,g,b; } Object;
 
 typedef struct { float x,z; int hp; bool active; } Enemy;
+static bool started, paused, gameComplete;
+static float px, pz, yaw, pitch;
 static Enemy enemies[4]={{8.5f,2.5f,3,true},{12.5f,6.5f,3,true},{5.5f,10.5f,3,true},{11.5f,11.5f,3,true}};
 static int ammo=12, reserveAmmo=48, score=0;
 static float damageFlash=0.0f;
