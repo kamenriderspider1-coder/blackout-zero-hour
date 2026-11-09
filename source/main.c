@@ -32,7 +32,7 @@ static Screen screen = SCREEN_HOME;
 static int menu = 0, weapon = 0, attachment = 0;
 static int px = 2, py = 2, facing = 1, intel = 0, ammo = 8, health = 100, score = 0;
 static bool intel_taken[INTEL_COUNT] = {false,false,false};
-static Actor drones[DRONE_COUNT] = {{12,2,true},{19,5,true},{7,9,true}};
+static Actor drones[DRONE_COUNT] = {{16,2,true},{19,5,true},{7,9,true}};
 static bool mission_won = false, mission_lost = false;
 static const int intel_x[INTEL_COUNT] = {8,18,4};
 static const int intel_y[INTEL_COUNT] = {2,7,9};
