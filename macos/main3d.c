@@ -48,6 +48,12 @@ static bool scanned[3]={false,false,false};
 static const V3 relays[3]={{12.5f,0.0f,2.5f},{3.5f,0.0f,9.5f},{10.5f,0.0f,12.5f}};
 static Object objects[MAX_OBJECTS];
 static int objectCount=0;
+static SDL_GameController *controller=NULL;
+static bool controlsMenu=false, invertLookY=false, swapSticks=false;
+static int sensitivityLevel=2, deadzoneLevel=1;
+static const float sensitivities[4]={0.0015f,0.0022f,0.0030f,0.0040f};
+static const Sint16 deadzones[3]={5000,8000,12000};
+static char settingsPath[1024];
 
 static V3 v3(float x,float y,float z){V3 v={x,y,z};return v;}
 static V3 add(V3 a,V3 b){return v3(a.x+b.x,a.y+b.y,a.z+b.z);}
@@ -106,7 +112,12 @@ static void render3D(void){
  drawCube(vp,add(eye,mul(forward,1.2f)),v3(.018f,.18f,.018f),v3(.85f,1.0f,.95f));
  glUseProgram(0);
 }
-static void resetGame(void){px=2.5f;pz=2.5f;yaw=.15f;pitch=0;found=0;memset(scanned,0,sizeof(scanned));started=true;paused=false;SDL_SetRelativeMouseMode(SDL_TRUE);}
+static void updateTitle(void){char t[256];snprintf(t,sizeof(t),"BLACKOUT: ZERO HOUR | F1 Controls | %s sticks | Y %s | Sensitivity %d | Deadzone %d",swapSticks?"Swapped":"Default",invertLookY?"Inverted":"Normal",sensitivityLevel+1,deadzoneLevel+1);SDL_SetWindowTitle(window,t);}
+static void saveControls(void){if(!settingsPath[0])return;FILE*f=fopen(settingsPath,"w");if(f){fprintf(f,"%d %d %d %d\\n",invertLookY,swapSticks,sensitivityLevel,deadzoneLevel);fclose(f);}}
+static void loadControls(void){char*base=SDL_GetPrefPath("BlackoutZeroHour","BLACKOUT ZERO HOUR");if(base){snprintf(settingsPath,sizeof(settingsPath),"%scontrols.cfg",base);SDL_free(base);}FILE*f=fopen(settingsPath,"r");if(f){int a,b,c,d;if(fscanf(f,"%d %d %d %d",&a,&b,&c,&d)==4){invertLookY=a!=0;swapSticks=b!=0;sensitivityLevel=c<0?0:(c>3?3:c);deadzoneLevel=d<0?0:(d>2?2:d);}fclose(f);}updateTitle();}
+static void openController(int i){if(controller){SDL_GameControllerClose(controller);controller=NULL;}if(i>=0&&SDL_IsGameController(i))controller=SDL_GameControllerOpen(i);}
+static float getAxis(SDL_GameControllerAxis a){if(!controller)return 0;float v=(float)SDL_GameControllerGetAxis(controller,a)/32767.0f;return fabsf(v)<(float)deadzones[deadzoneLevel]/32767.0f?0:v;}
+static void resetGame(void){px=2.5f;pz=2.5f;yaw=.15f;pitch=0;found=0;memset(scanned,0,sizeof(scanned));started=true;paused=false;controlsMenu=false;SDL_SetRelativeMouseMode(controller?SDL_FALSE:SDL_TRUE);}
 int main(int argc,char **argv){(void)argc;(void)argv;
  if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER)!=0){fprintf(stderr,"%s\n",SDL_GetError());return 1;}
  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,3);SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,2);SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE);SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,24);
@@ -115,14 +126,23 @@ int main(int argc,char **argv){(void)argc;(void)argv;
  SDL_GL_SetSwapInterval(1);if(!initGL()){fprintf(stderr,"OpenGL initialization failed\n");return 4;}buildWorld();
  Uint64 last=SDL_GetPerformanceCounter();double freq=(double)SDL_GetPerformanceFrequency();SDL_SetRelativeMouseMode(SDL_FALSE);
  while(running){Uint64 now=SDL_GetPerformanceCounter();float dt=(float)((now-last)/freq);last=now;if(dt>.05f)dt=.05f;
-  SDL_Event e;while(SDL_PollEvent(&e)){if(e.type==SDL_QUIT)running=false;if(e.type==SDL_WINDOWEVENT&&e.window.event==SDL_WINDOWEVENT_SIZE_CHANGED){width=e.window.data1;height=e.window.data2;}
+  SDL_Event e;while(SDL_PollEvent(&e)){if(e.type==SDL_QUIT)running=false;
+   if(e.type==SDL_CONTROLLERDEVICEADDED&&!controller)openController(e.cdevice.which);
+   if(e.type==SDL_CONTROLLERDEVICEREMOVED&&controller&&SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(controller))==e.cdevice.which)openController(-1);if(e.type==SDL_WINDOWEVENT&&e.window.event==SDL_WINDOWEVENT_SIZE_CHANGED){width=e.window.data1;height=e.window.data2;}
    if(e.type==SDL_MOUSEMOTION&&started&&!paused){yaw+=(float)e.motion.xrel*.0025f;pitch-=(float)e.motion.yrel*.0022f;if(pitch>1.25f)pitch=1.25f;if(pitch< -1.25f)pitch=-1.25f;}
-   if(e.type==SDL_KEYDOWN&&!e.key.repeat){SDL_Keycode k=e.key.keysym.sym;if(k==SDLK_ESCAPE){paused=!paused;SDL_SetRelativeMouseMode(started&&!paused?SDL_TRUE:SDL_FALSE);}if(!started&&k==SDLK_RETURN)resetGame();else if(started&&paused&&k==SDLK_RETURN){paused=false;SDL_SetRelativeMouseMode(SDL_TRUE);}else if(started&&!paused&&k==SDLK_e){for(int i=0;i<3;i++){float dx=px-relays[i].x,dz=pz-relays[i].z;if(!scanned[i]&&dx*dx+dz*dz<2.2f){scanned[i]=true;found++;}}}}
+   if(e.type==SDL_KEYDOWN&&!e.key.repeat){SDL_Keycode k=e.key.keysym.sym;
+    if(k==SDLK_F1){controlsMenu=!controlsMenu;paused=controlsMenu;SDL_SetRelativeMouseMode(controller?SDL_FALSE:(started&&!paused?SDL_TRUE:SDL_FALSE));}
+    else if(controlsMenu&&(k==SDLK_1||k==SDLK_2||k==SDLK_3||k==SDLK_4)){if(k==SDLK_1)invertLookY=!invertLookY;if(k==SDLK_2)swapSticks=!swapSticks;if(k==SDLK_3)sensitivityLevel=(sensitivityLevel+1)%4;if(k==SDLK_4)deadzoneLevel=(deadzoneLevel+1)%3;saveControls();updateTitle();}
+    else if(k==SDLK_ESCAPE){if(controlsMenu){controlsMenu=false;paused=false;}else paused=!paused;SDL_SetRelativeMouseMode(controller?SDL_FALSE:(started&&!paused?SDL_TRUE:SDL_FALSE));}
+    if(!started&&k==SDLK_RETURN)resetGame();else if(started&&paused&&!controlsMenu&&k==SDLK_RETURN){paused=false;SDL_SetRelativeMouseMode(controller?SDL_FALSE:SDL_TRUE);}else if(started&&!paused&&k==SDLK_e){for(int i=0;i<3;i++){float dx=px-relays[i].x,dz=pz-relays[i].z;if(!scanned[i]&&dx*dx+dz*dz<2.2f){scanned[i]=true;found++;}}}}
+   if(e.type==SDL_CONTROLLERBUTTONDOWN&&controller){if(controlsMenu){if(e.cbutton.button==SDL_CONTROLLER_BUTTON_A){sensitivityLevel=(sensitivityLevel+1)%4;saveControls();updateTitle();}if(e.cbutton.button==SDL_CONTROLLER_BUTTON_B){controlsMenu=false;paused=false;}}else if(e.cbutton.button==SDL_CONTROLLER_BUTTON_START)paused=!paused;else if(started&&!paused&&e.cbutton.button==SDL_CONTROLLER_BUTTON_A){for(int i=0;i<3;i++){float dx=px-relays[i].x,dz=pz-relays[i].z;if(!scanned[i]&&dx*dx+dz*dz<2.2f){scanned[i]=true;found++;}}}}
   }
-  if(started&&!paused){const Uint8*k=SDL_GetKeyboardState(NULL);float fx=cosf(yaw),fz=sinf(yaw),rx=-fz,rz=fx,mx=0,mz=0;if(k[SDL_SCANCODE_W]||k[SDL_SCANCODE_UP]){mx+=fx;mz+=fz;}if(k[SDL_SCANCODE_S]||k[SDL_SCANCODE_DOWN]){mx-=fx;mz-=fz;}if(k[SDL_SCANCODE_A]){mx+=rx;mz+=rz;}if(k[SDL_SCANCODE_D]){mx-=rx;mz-=rz;}float l=sqrtf(mx*mx+mz*mz);if(l>0){mx=mx/l*3.0f*dt;mz=mz/l*3.0f*dt;if(!wall(px+mx,pz))px+=mx;if(!wall(px,pz+mz))pz+=mz;}if(k[SDL_SCANCODE_LEFT])yaw-=1.8f*dt;if(k[SDL_SCANCODE_RIGHT])yaw+=1.8f*dt;}
+  if(started&&!paused){const Uint8*k=SDL_GetKeyboardState(NULL);float fx=cosf(yaw),fz=sinf(yaw),rx=-fz,rz=fx,mx=0,mz=0;if(k[SDL_SCANCODE_W]||k[SDL_SCANCODE_UP]){mx+=fx;mz+=fz;}if(k[SDL_SCANCODE_S]||k[SDL_SCANCODE_DOWN]){mx-=fx;mz-=fz;}if(k[SDL_SCANCODE_A]){mx+=rx;mz+=rz;}if(k[SDL_SCANCODE_D]){mx-=rx;mz-=rz;}
+    if(controller){SDL_GameControllerAxis moveX=swapSticks?SDL_CONTROLLER_AXIS_RIGHTX:SDL_CONTROLLER_AXIS_LEFTX,moveY=swapSticks?SDL_CONTROLLER_AXIS_RIGHTY:SDL_CONTROLLER_AXIS_LEFTY,aimX=swapSticks?SDL_CONTROLLER_AXIS_LEFTX:SDL_CONTROLLER_AXIS_RIGHTX,aimY=swapSticks?SDL_CONTROLLER_AXIS_LEFTY:SDL_CONTROLLER_AXIS_RIGHTY;float lx=getAxis(moveX),ly=getAxis(moveY);mx+=fx*(-ly)+rx*lx;mz+=fz*(-ly)+rz*lx;yaw+=getAxis(aimX)*2.4f*dt;pitch+=getAxis(aimY)*2.0f*dt*(invertLookY?1.0f:-1.0f);}
+    float l=sqrtf(mx*mx+mz*mz);if(l>1){mx/=l;mz/=l;}if(l>0){mx*=3.0f*dt;mz*=3.0f*dt;if(!wall(px+mx,pz))px+=mx;if(!wall(px,pz+mz))pz+=mz;}if(k[SDL_SCANCODE_LEFT])yaw-=1.8f*dt;if(k[SDL_SCANCODE_RIGHT])yaw+=1.8f*dt;if(pitch>1.25f)pitch=1.25f;if(pitch< -1.25f)pitch=-1.25f;}
   render3D();
   if(!started||paused||found==3){glDisable(GL_DEPTH_TEST);glUseProgram(program);M4 ortho=identity();ortho.m[0]=2.0f/(float)width;ortho.m[5]=-2.0f/(float)height;ortho.m[10]=-.01f;ortho.m[12]=-1;ortho.m[13]=1;glUniform3f(locLight,0,10,0);if(!started){drawCube(ortho,v3(width*.5f,height*.28f,0),v3(440,55,1),v3(.04f,.48f,.48f));drawCube(ortho,v3(width*.5f,height*.48f,0),v3(570,18,1),v3(.75f,.9f,.88f));}else if(paused){drawCube(ortho,v3(width*.5f,height*.42f,0),v3(300,45,1),v3(.15f,.5f,.5f));}else{drawCube(ortho,v3(width*.5f,height*.42f,0),v3(360,50,1),v3(.12f,.8f,.42f));}glEnable(GL_DEPTH_TEST);}
   SDL_GL_SwapWindow(window);SDL_Delay(1);
  }
- SDL_SetRelativeMouseMode(SDL_FALSE);glDeleteBuffers(1,&vbo);glDeleteVertexArrays(1,&vao);glDeleteProgram(program);SDL_GL_DeleteContext(context);SDL_DestroyWindow(window);SDL_Quit();return 0;
+ SDL_SetRelativeMouseMode(SDL_FALSE);if(controller)SDL_GameControllerClose(controller);glDeleteBuffers(1,&vbo);glDeleteVertexArrays(1,&vao);glDeleteProgram(program);SDL_GL_DeleteContext(context);SDL_DestroyWindow(window);SDL_Quit();return 0;
 }
