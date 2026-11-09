@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+// macOS target: SDL2 window + OpenGL 3.2 core profile.
+
 #define PI 3.14159265358979323846f
 #define MAP_W 16
 #define MAP_H 16
