@@ -7,9 +7,13 @@ on:
       - '.github/workflows/build-macos.yml'
       - 'README.md'
   workflow_dispatch:
+concurrency:
+  group: blackout-zero-hour-macos-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   macos:
     runs-on: macos-14
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Install SDL2
@@ -21,7 +25,7 @@ jobs:
           mkdir -p "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS"
           mkdir -p "dist/BLACKOUT ZERO HOUR.app/Contents/Frameworks"
           SDL_PREFIX="$(brew --prefix sdl2)"
-          clang -O2 -Wall -Wextra $(sdl2-config --cflags) macos/main.c $(sdl2-config --libs) -o "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
+          clang -O2 -Wall -Wextra $(sdl2-config --cflags) macos/main.c $(sdl2-config --libs) -lm -o "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
           cp "$SDL_PREFIX/lib/libSDL2-2.0.0.dylib" "dist/BLACKOUT ZERO HOUR.app/Contents/Frameworks/"
           install_name_tool -id "@executable_path/../Frameworks/libSDL2-2.0.0.dylib" "dist/BLACKOUT ZERO HOUR.app/Contents/Frameworks/libSDL2-2.0.0.dylib"
           install_name_tool -change "$SDL_PREFIX/lib/libSDL2-2.0.0.dylib" "@executable_path/../Frameworks/libSDL2-2.0.0.dylib" "dist/BLACKOUT ZERO HOUR.app/Contents/MacOS/blackout-zero-hour"
