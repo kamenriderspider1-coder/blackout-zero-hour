@@ -1,23 +1,23 @@
 # BLACKOUT: ZERO HOUR
 
-An original Nintendo Switch homebrew action prototype.
+An original Nintendo Switch homebrew first-person shooter prototype.
 
-## Playtest build 0.2
+## 3D graphics prototype
 
-This build expands the original movement proof-of-concept into a playable top-down tactical mission with a console-rendered interface.
+The previous build used the libnx text console. That was not the requested game, so the project is being moved to a custom polygon-rendered first-person engine.
 
-Implemented:
-- Operations menu
-- Three selectable fictional primary weapon profiles
-- Gunsmith menu with three toggleable cosmetic/configuration slots
-- One campaign-style mission, Operation Nightfall
-- Grid movement and wall collision
-- Three intel caches and extraction objective
-- Three simulated target drones
-- Directional pulse mechanic, ammo counter, and recharge
-- Mission completion screen and score
+Current graphics work in this branch:
+- Full-screen framebuffer rendering instead of the terminal console
+- Perspective-projected 3D polygon geometry and depth buffer
+- First-person camera with analog-stick look and movement
+- A visible in-game weapon model built from 3D geometry
+- 3D environment blocks, floor perspective, crosshair, and HUD
+- Operations, loadout, and gunsmith screens
+- Toggleable fictional optic, barrel, and grip models
 
-This is a playable early prototype, **not a finished 3D first-person shooter**. It does not yet include 3D weapon models, animated graphics, campaign chapters, enemy AI, online/local multiplayer, split-screen, voice, or a full progression system. The current interface uses the Switch homebrew console renderer.
+## Current limitations
+
+This is an early software-rendered 3D engine proof of concept, not a finished AAA-style shooter. The renderer currently uses simple flat-shaded geometry. It does not yet have textured environments, skeletal animation, full enemy AI, campaign missions, multiplayer, online services, or a complete progression system. The build must pass GitHub Actions and be tested on the actual Switch before it can be called playable on hardware.
 
 ## Build
 
@@ -33,33 +33,26 @@ Launch it from Homebrew Menu on a Switch running Atmosphère.
 
 ## Controls
 
-**Operations menu**
-- D-pad up/down: navigate
-- A: select
-- Plus: quit
+**Operations**
+- A: deploy
+- X: loadout
+- Y: gunsmith
+- Plus: exit
 
 **Loadout**
-- Left/right: choose weapon
-- A: return to operations
+- Left/right: select weapon
+- A: return
 - B: back
 
 **Gunsmith**
-- Up/down: choose configuration slot
-- A: toggle slot
+- Up/down: choose attachment
+- A: toggle attachment
 - B: back
 
-**Mission**
-- D-pad: move
-- A: collect intel / use extraction
-- X: directional pulse
-- Y: recharge ammo
+**3D mission**
+- Left stick or D-pad: move
+- Right stick: look around
 - B: return to operations
-- Plus: quit
-
-Collect all three intel caches, then reach the E extraction marker. The pulse travels horizontally in the direction of your last horizontal movement.
-
-## ChatGPT development link
-
-The connected GitHub repository is the development bridge. Feature requests in the BLACKOUT project conversation can be implemented in these source files, committed here, and compiled by Actions. This is not a live ChatGPT service inside the Switch game. See [docs/CHATGPT_DEV_LINK.md](docs/CHATGPT_DEV_LINK.md).
+- Plus: exit
 
 All names, code, maps, and planned content are original. This unofficial homebrew project is not affiliated with or endorsed by Nintendo or any commercial game publisher.
