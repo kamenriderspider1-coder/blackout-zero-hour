@@ -25,6 +25,8 @@ static int operator_id = 0;
 static int mission_time = 0;
 static bool beacon_found = false;
 static bool mission_won = false;
+static int menu_index = 0;
+static int game_mode = 0;
 
 static V3 v3(float x,float y,float z){ return (V3){x,y,z}; }
 static V3 sub(V3 a,V3 b){ return v3(a.x-b.x,a.y-b.y,a.z-b.z); }
@@ -153,12 +155,14 @@ static void panel(void){
  rect(30,30,W-60,4,rgb(26,179,185));
  text(65,65,"BLACKOUT ZERO HOUR",rgb(87,214,218));
  if(screen==0){
-  text(65,130,"TACTICAL OPERATIONS",rgb(230,235,233));
-  text(65,190,"A  BEGIN OPERATION NIGHTFALL",rgb(230,235,233));
-  text(65,230,"X  SELECT EXPLORER",rgb(190,203,207));
-  text(65,270,"Y  FIELD BRIEFING",rgb(190,203,207));
-  text(65,310,"PLUS  EXIT",rgb(190,203,207));
-  text(65,390,"3D EXPLORATION / RESCUE PROTOTYPE",rgb(87,214,218));
+  text(65,112,"MAIN OPERATIONS",rgb(230,235,233));
+  const char *items[5]={"CAMPAIGN","MULTIPLAYER","CO-OP OPERATIONS","SURVIVAL","EXTRAS"};
+  for(int i=0;i<5;i++){
+   if(i==menu_index)rect(54,151+i*48,560,36,rgb(28,74,78));
+   text(75,160+i*48,items[i],i==menu_index?rgb(105,231,222):rgb(205,216,218));
+  }
+  text(65,420,"UP DOWN SELECT   A OPEN   PLUS EXIT",rgb(87,214,218));
+  text(65,470,"ONLINE PLAY REQUIRES A CONFIGURED GAME SERVER",rgb(180,194,198));
  } else if(screen==1){
   text(65,130,"SELECT EXPLORER",rgb(230,235,233));
   text(65,190,operator_id==0?"> FIELD TECH":"  FIELD TECH",rgb(230,235,233));
@@ -176,6 +180,43 @@ static void panel(void){
   text(65,205,"RELAY SIGNAL RESTORED",rgb(230,235,233));
   text(65,255,"OPERATION NIGHTFALL SUCCESSFUL",rgb(210,220,220));
   text(65,340,"A REPLAY MISSION   B MAIN MENU",rgb(87,214,218));
+ } else if(screen==5){
+  text(65,130,"CAMPAIGN",rgb(230,235,233));
+  text(65,190,"A  START OPERATION NIGHTFALL",rgb(210,220,220));
+  text(65,235,"X  SELECT EXPLORER",rgb(210,220,220));
+  text(65,280,"Y  READ FIELD BRIEFING",rgb(210,220,220));
+  text(65,365,"B  MAIN MENU",rgb(87,214,218));
+ } else if(screen==6){
+  text(65,130,"MULTIPLAYER",rgb(230,235,233));
+  text(65,190,"A  PUBLIC MATCHMAKING",rgb(210,220,220));
+  text(65,235,"X  PRIVATE ROOM",rgb(210,220,220));
+  text(65,280,"TARGET PLAYERS: 8",rgb(87,214,218));
+  text(65,325,"ONLINE SERVICE NOT CONFIGURED",rgb(245,190,112));
+  text(65,365,"B  MAIN MENU",rgb(87,214,218));
+ } else if(screen==7){
+  text(65,130,"CO-OP OPERATIONS",rgb(230,235,233));
+  text(65,190,"A  TEAM RESCUE OPERATION",rgb(210,220,220));
+  text(65,235,"X  PRIVATE TEAM ROOM",rgb(210,220,220));
+  text(65,280,"UP TO 8 PLAYERS PLANNED",rgb(87,214,218));
+  text(65,325,"ONLINE SERVICE NOT CONFIGURED",rgb(245,190,112));
+  text(65,365,"B  MAIN MENU",rgb(87,214,218));
+ } else if(screen==8){
+  text(65,130,"SURVIVAL",rgb(230,235,233));
+  text(65,190,"A  START RELAY RECOVERY CHALLENGE",rgb(210,220,220));
+  text(65,235,"COMPLETE OBJECTIVES BEFORE TIME RUNS OUT",rgb(210,220,220));
+  text(65,365,"B  MAIN MENU",rgb(87,214,218));
+ } else if(screen==9){
+  text(65,130,"EXTRAS",rgb(230,235,233));
+  text(65,190,"A  SELECT EXPLORER",rgb(210,220,220));
+  text(65,235,"X  VIEW FIELD BRIEFING",rgb(210,220,220));
+  text(65,280,"ONLINE STATUS: NOT CONNECTED",rgb(245,190,112));
+  text(65,365,"B  MAIN MENU",rgb(87,214,218));
+ } else if(screen==10){
+  text(65,130,"ONLINE LOBBY",rgb(230,235,233));
+  text(65,190,"BLACKOUT ZERO HOUR  /  8 PLAYER TARGET",rgb(210,220,220));
+  text(65,235,"SERVER ADDRESS HAS NOT BEEN CONFIGURED",rgb(245,190,112));
+  text(65,280,"NO PLAYERS CONNECTED",rgb(210,220,220));
+  text(65,365,"B  BACK",rgb(87,214,218));
  }
 }
 int main(void){
@@ -192,19 +233,45 @@ int main(void){
   HidAnalogStickState left=padGetStickPos(&pad,0),right=padGetStickPos(&pad,1);
   if(down&HidNpadButton_Plus)break;
   if(screen==0){
-   if(down&HidNpadButton_A){screen=3;beacon_found=false;mission_won=false;cam=(Cam){0,0,0};yaw=0;}
+   if(down&HidNpadButton_Up)menu_index=(menu_index+4)%5;
+   if(down&HidNpadButton_Down)menu_index=(menu_index+1)%5;
+   if(down&HidNpadButton_A){
+    if(menu_index==0)screen=5;
+    else if(menu_index==1)screen=6;
+    else if(menu_index==2)screen=7;
+    else if(menu_index==3)screen=8;
+    else screen=9;
+   }
+  }else if(screen==5){
+   if(down&HidNpadButton_A){game_mode=0;screen=3;beacon_found=false;mission_won=false;cam=(Cam){0,0,0};yaw=0;}
    if(down&HidNpadButton_X)screen=1;
    if(down&HidNpadButton_Y)screen=2;
+   if(down&HidNpadButton_B)screen=0;
+  }else if(screen==6){
+   if(down&HidNpadButton_A||down&HidNpadButton_X)screen=10;
+   if(down&HidNpadButton_B)screen=0;
+  }else if(screen==7){
+   if(down&HidNpadButton_A||down&HidNpadButton_X)screen=10;
+   if(down&HidNpadButton_B)screen=0;
+  }else if(screen==8){
+   if(down&HidNpadButton_A){game_mode=1;screen=3;beacon_found=false;mission_won=false;cam=(Cam){0,0,0};yaw=0;}
+   if(down&HidNpadButton_B)screen=0;
+  }else if(screen==9){
+   if(down&HidNpadButton_A)screen=1;
+   if(down&HidNpadButton_X)screen=2;
+   if(down&HidNpadButton_B)screen=0;
+  }else if(screen==10){
+   if(down&HidNpadButton_B)screen=6;
   }else if(screen==1){
    if(down&HidNpadButton_Left||down&HidNpadButton_Right)operator_id=1-operator_id;
    if(down&HidNpadButton_A)screen=0;
    if(down&HidNpadButton_B)screen=0;
   }else if(screen==2){
    if(down&HidNpadButton_A){screen=3;beacon_found=false;cam=(Cam){0,0,0};yaw=0;}
-   if(down&HidNpadButton_B)screen=0;
+   if(down&HidNpadButton_B)screen=5;
   }else if(screen==4){
    if(down&HidNpadButton_A){screen=3;beacon_found=false;mission_won=false;cam=(Cam){0,0,0};yaw=0;}
-   if(down&HidNpadButton_B)screen=0;
+   if(down&HidNpadButton_B)screen=5;
   }else{
    if(down&HidNpadButton_A && !beacon_found){
     float dx=cam.x,dz=cam.z-13.7f;
