@@ -193,9 +193,7 @@ int main(void){
    if(down&HidNpadButton_A)screen=0;
    if(down&HidNpadButton_B)screen=0;
   }else if(screen==2){
-   if(down&HidNpadButton_Up)attachment=(attachment+2)%3;
-   if(down&HidNpadButton_Down)attachment=(attachment+1)%3;
-   if(down&HidNpadButton_A)equipped[attachment]=!equipped[attachment];
+   if(down&HidNpadButton_A){screen=3;beacon_found=false;cam=(Cam){0,0,0};yaw=0;}
    if(down&HidNpadButton_B)screen=0;
   }else{
    if(down&HidNpadButton_A && cam.z>10.0f && cam.z<18.0f && fabsf(cam.x)<4.0f)beacon_found=true;
