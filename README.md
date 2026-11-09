@@ -1,44 +1,34 @@
 # BLACKOUT: ZERO HOUR
 
-An original Nintendo Switch homebrew exploration and rescue game prototype.
+An original exploration and rescue game project with Nintendo Switch homebrew and native macOS targets.
 
-## Current menu structure
+## macOS version
 
-- **Campaign:** Operation Nightfall story mission, explorer selection, and field briefing
-- **Multiplayer:** public matchmaking and private-room menu, designed around 12 player slots
-- **Co-op Operations:** team expedition and private team-room menu, designed around up to 12 players
-- **Survival:** relay recovery challenge
-- **Extras:** explorer selection, field briefing, and online status
+A native SDL2 desktop build is provided for Apple Silicon and Intel Macs. It runs as a standard macOS app and does not require Windows or a virtual machine.
 
-## Online multiplayer status
+### Controls
+- Main menus: W/S or Up/Down, Return to select, Escape to go back
+- Gameplay: WASD or arrow keys to move, E to scan the relay, Escape to return to menu
+- Return on the mission-complete screen to replay
 
-**12 players is the design target, not a working online feature yet.** The current NRO does not connect to a matchmaking or game server. Wi-Fi connectivity alone is not enough: online play still needs a hosted service for account/session handling, lobby discovery, invites, and synchronized game state. The lobby screen currently reports that the online service is not configured. No players can join yet.
+### Current playable content
+- Main menu with Campaign, Multiplayer, Co-op Operations, Survival, and Extras
+- A playable offline relay-recovery mission in Campaign
+- A survival entry using the same current prototype mission
+- Mission-complete and replay flow
 
-The next engineering milestone is a small dedicated session service plus a Switch network client, followed by testing with multiple consoles. The server endpoint and deployment environment must be selected and configured before real online play can be enabled.
+### Online status
+The 12-player multiplayer and co-op menus are present, but real online sessions are not yet implemented. A dedicated server, matchmaking, lobby/session protocol, and client networking still need to be built and deployed. The menu does not imply that online play is currently available.
 
-## Current prototype
+## Nintendo Switch
+The Switch target remains in `source/main.c` and uses devkitPro/libnx. Build it with the repository's Makefile and install the resulting NRO under `SD:/switch/blackout-zero-hour/`.
 
-- Software-rendered 3D scene with perspective projection and depth buffering
-- First-person camera movement and look
-- Handheld signal scanner and visible relay beacon
-- One complete offline mission loop: locate and scan the relay, then return to extraction
-- Mission-complete screen with replay and main-menu options
+## Build macOS locally
+Install SDL2 and Xcode Command Line Tools, then run:
+```sh
+brew install sdl2
+clang -O2 $(sdl2-config --cflags) macos/main.c $(sdl2-config --libs) -o blackout-zero-hour
+./blackout-zero-hour
+```
 
-This remains an early prototype, not a commercial-scale game. Several menu destinations are scaffolding and do not yet contain full game modes. It uses simple flat-shaded geometry and a software renderer. Runtime behavior still needs confirmation on physical Switch hardware.
-
-## Build and install
-
-GitHub Actions builds the NRO using devkitPro devkitA64/libnx. Download the `BLACKOUT-ZERO-HOUR-NRO` artifact from the newest successful Actions run.
-
-Copy `blackout-zero-hour.nro` to:
-
-`SD:/switch/blackout-zero-hour/blackout-zero-hour.nro`
-
-Launch it from Homebrew Menu on a Switch running Atmosphère.
-
-## Controls
-
-- Menus: D-pad Up/Down to navigate, A to select, B to go back, Plus to exit
-- Mission: left stick to move, right stick to look, D-pad to move, A to scan the beacon when close, B to return to menu
-
-This is an unofficial homebrew project and is not affiliated with or endorsed by Nintendo.
+This is an early cross-platform prototype. It has not yet been verified on physical Switch hardware or across different Mac models.
