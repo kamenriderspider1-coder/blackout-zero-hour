@@ -80,6 +80,16 @@ No real-money purchases are available in the current build. The credits economy 
 4. **Polish:** Replace blockout geometry with authored 3D environments and props; add character animation, sound design, music, effects, accessibility options, graphics settings, and performance optimization.
 5. **Multiplayer:** Add four-player local split-screen and up-to-eight-player online co-op only after the single-player FPS and networking foundations are stable.
 
+<!-- MACOS-DOWNLOADS-START -->
+## Download for macOS
+
+Both installers below were generated and verified by the GitHub Actions release workflow.
+
+- [Apple Silicon (M1/M2/M3/M4)](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/download/v1.0.0/BLACKOUT-ZERO-HOUR-macOS-arm64.dmg)
+- [Intel Mac](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/download/v1.0.0/BLACKOUT-ZERO-HOUR-macOS-x64.dmg)
+
+See the [full release notes and files](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/tag/v1.0.0).
+<!-- MACOS-DOWNLOADS-END -->
 ## Build
 
 The GitHub Actions macOS workflow builds the native SDL2 + OpenGL application and packages a DMG. A downloadable installer should only be considered available after the workflow completes successfully and the artifact is verified. Builds are currently unsigned and may show a macOS Gatekeeper warning.
