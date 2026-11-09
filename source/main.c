@@ -188,16 +188,16 @@ static void panel(void){
   text(65,365,"B  MAIN MENU",rgb(87,214,218));
  } else if(screen==6){
   text(65,130,"MULTIPLAYER",rgb(230,235,233));
-  text(65,190,"A  PUBLIC MATCHMAKING",rgb(210,220,220));
-  text(65,235,"X  PRIVATE ROOM",rgb(210,220,220));
-  text(65,280,"TARGET PLAYERS: 8",rgb(87,214,218));
+  text(65,190,"A  PUBLIC MATCHMAKING  /  12 SLOTS",rgb(210,220,220));
+  text(65,235,"X  PRIVATE ROOM  /  INVITE LOBBY",rgb(210,220,220));
+  text(65,280,"TARGET PLAYERS: 12",rgb(87,214,218));
   text(65,325,"ONLINE SERVICE NOT CONFIGURED",rgb(245,190,112));
   text(65,365,"B  MAIN MENU",rgb(87,214,218));
  } else if(screen==7){
   text(65,130,"CO-OP OPERATIONS",rgb(230,235,233));
-  text(65,190,"A  TEAM RESCUE OPERATION",rgb(210,220,220));
-  text(65,235,"X  PRIVATE TEAM ROOM",rgb(210,220,220));
-  text(65,280,"UP TO 8 PLAYERS PLANNED",rgb(87,214,218));
+  text(65,190,"A  TEAM EXPEDITION  /  12 SLOTS",rgb(210,220,220));
+  text(65,235,"X  PRIVATE TEAM ROOM  /  INVITES",rgb(210,220,220));
+  text(65,280,"UP TO 12 PLAYERS PLANNED",rgb(87,214,218));
   text(65,325,"ONLINE SERVICE NOT CONFIGURED",rgb(245,190,112));
   text(65,365,"B  MAIN MENU",rgb(87,214,218));
  } else if(screen==8){
@@ -213,7 +213,7 @@ static void panel(void){
   text(65,365,"B  MAIN MENU",rgb(87,214,218));
  } else if(screen==10){
   text(65,130,"ONLINE LOBBY",rgb(230,235,233));
-  text(65,190,"BLACKOUT ZERO HOUR  /  8 PLAYER TARGET",rgb(210,220,220));
+  text(65,190,"BLACKOUT ZERO HOUR  /  12 PLAYER TARGET",rgb(210,220,220));
   text(65,235,"SERVER ADDRESS HAS NOT BEEN CONFIGURED",rgb(245,190,112));
   text(65,280,"NO PLAYERS CONNECTED",rgb(210,220,220));
   text(65,365,"B  BACK",rgb(87,214,218));
