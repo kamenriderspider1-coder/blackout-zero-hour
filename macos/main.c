@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "net_client.h"
 
 #define W 1280
 #define H 720
@@ -32,6 +33,7 @@ static SDL_Renderer *ren;
 static float px=2.5f,py=2.5f,angle=0.15f;
 static int found=0,scene=0,menu=0;
 static bool running=true;
+static BlackoutNet network;
 static const float beaconX[3]={12.5f,3.5f,10.5f};
 static const float beaconY[3]={2.5f,9.5f,12.5f};
 static bool collected[3]={false,false,false};
@@ -100,6 +102,8 @@ int main(int argc,char**argv){
  if(!win){SDL_Quit();return 2;}
  ren=SDL_CreateRenderer(win,-1,SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);if(!ren)ren=SDL_CreateRenderer(win,-1,SDL_RENDERER_SOFTWARE);
  if(!ren){SDL_DestroyWindow(win);SDL_Quit();return 3;}
+ const char *server=getenv("BLACKOUT_SERVER");
+ if(server && *server) blackout_net_connect(&network,server,8765,"Explorer","PUBLIC");
  SDL_SetRelativeMouseMode(SDL_TRUE);Uint64 last=SDL_GetPerformanceCounter();double freq=(double)SDL_GetPerformanceFrequency();
  while(running){
   Uint64 now=SDL_GetPerformanceCounter();float dt=(float)((now-last)/freq);last=now;if(dt>0.05f)dt=0.05f;
@@ -125,7 +129,8 @@ int main(int argc,char**argv){
   }
   SDL_SetRenderDrawColor(ren,5,11,18,255);SDL_RenderClear(ren);
   if(scene==0)menu_screen();else if(scene==1)draw_world();else if(scene==2){panel();text(60,170,"EXPEDITION PAUSED",(SDL_Color){240,245,238,255});text(60,235,"ENTER - RESUME",(SDL_Color){130,225,215,255});text(60,285,"ESC - MAIN MENU",(SDL_Color){130,225,215,255});}else{panel();text(60,190,"EXPEDITION COMPLETE",(SDL_Color){130,245,190,255});text(60,255,"ALL THREE SIGNAL RELAYS RESTORED",(SDL_Color){235,240,232,255});text(60,330,"ENTER - MAIN MENU",(SDL_Color){130,225,215,255});}
+  if(scene==1) blackout_net_update(&network,px,py,angle,found);
   SDL_RenderPresent(ren);SDL_Delay(1);
  }
- SDL_SetRelativeMouseMode(SDL_FALSE);SDL_DestroyRenderer(ren);SDL_DestroyWindow(win);SDL_Quit();return 0;
+ blackout_net_close(&network);SDL_SetRelativeMouseMode(SDL_FALSE);SDL_DestroyRenderer(ren);SDL_DestroyWindow(win);SDL_Quit();return 0;
 }
