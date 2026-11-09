@@ -1,24 +1,56 @@
 # BLACKOUT: ZERO HOUR
 
-An original first-person exploration and rescue game for macOS.
+**BLACKOUT: ZERO HOUR is an original, fast-paced first-person shooter (FPS) for macOS, inspired by the pacing, mission structure, and presentation of Call of Duty: Modern Warfare 3.** It is not an exploration-and-rescue game.
 
-## Current 3D prototype
+The goal is a cinematic, mission-based shooter with responsive first-person controls, enemy encounters, weapon handling, objective-driven combat, and a full campaign. The game should prioritize the FPS experience: moving through combat spaces, engaging hostile AI, completing mission objectives under pressure, and progressing through a connected story.
 
-The macOS build target is now the native SDL2 + OpenGL 3.2 core prototype in `macos/main3d.c`. It uses polygonal cube geometry, a perspective projection, a first-person camera, depth testing, basic directional shading, wall collision, three relay objectives, and an extraction marker. It is an early blockout prototype, not a finished AAA-quality game: it does not yet include detailed art assets, character animations, cinematic sequences, campaign progression, or working multiplayer.
+## Game vision
 
-### Controls
+- **Genre:** First-person shooter.
+- **Core loop:** Deploy into a mission, navigate combat arenas, fight hostile AI, complete mission objectives, and reach the mission endpoint.
+- **Presentation:** Modern military-action atmosphere, cinematic mission introductions, readable HUD, impactful audio, and detailed 3D environments. The game is an original project and should use original or properly licensed assets.
+- **Campaign:** Five connected missions with varied locations, objectives, checkpoints, save progression, dialogue, and cinematic moments.
+- **Player systems:** First-person mouse look, responsive movement, sprinting, aiming, reloading, health, ammunition, and weapon switching.
+- **Combat systems:** Hostile AI with distinct behaviors, cover-aware movement, hit feedback, encounter pacing, and mission-based enemy waves.
+- **Co-op goal:** Four-player local split-screen and up-to-eight-player online co-op, developed after the single-player FPS foundation is stable.
+
+## Current implementation status
+
+The current native prototype in `macos/main3d.c` is an early 3D blockout. It has an SDL2 + OpenGL 3.2 window, a first-person camera, basic movement and collision, simple polygonal geometry, and placeholder relay/extraction interactions.
+
+**Important:** This prototype is not yet the intended FPS. It does not yet have a complete combat loop, weapon systems, hostile AI, campaign missions, cinematic presentation, or multiplayer. Those are development targets, not completed features. The next development work must replace the exploration-style relay loop with an actual FPS mission and combat loop.
+
+## Controls
+
+### Current prototype controls
 - Return: start / resume
 - W, A, S, D: move
 - Mouse: look around
 - Left / Right arrows: turn
-- E: scan a nearby relay
+- E: interact with a nearby placeholder relay
 - Escape: pause / resume
 
-### Planned next milestones
-- Replace blockout geometry with authored 3D environment and prop assets.
-- Add mission UI, audio, dialogue, checkpoint/save progression, and the five-mission campaign.
-- Add four-player local split-screen and up-to-eight-player online co-op after the core 3D game is stable.
+### Intended FPS controls
+- W, A, S, D: move
+- Mouse: aim / look
+- Left mouse button: fire
+- Right mouse button: aim down sights
+- Shift: sprint
+- R: reload
+- Number keys / mouse wheel: switch equipped item
+- E: interact with mission objects
+- Escape: pause
+
+The intended FPS controls describe the target design; they are not all implemented in the current prototype yet.
+
+## Development milestones
+
+1. **Playable FPS foundation:** Replace relay scanning as the main loop with a combat-focused mission; add a visible weapon presentation, firing, aiming, reload/ammo state, player health, hit feedback, and a proper FPS HUD.
+2. **Enemy encounters:** Add original hostile AI with patrol, alert, pursuit, cover-seeking, and damage states; build balanced combat spaces and encounter waves.
+3. **Campaign:** Build five connected missions with varied environments, mission briefings, objectives, dialogue, cinematic sequences, checkpoints, save progression, and mission completion screens.
+4. **Polish:** Replace blockout geometry with authored 3D environments and props; add character animation, sound design, music, effects, accessibility options, graphics settings, and performance optimization.
+5. **Multiplayer:** Add four-player local split-screen and up-to-eight-player online co-op only after the single-player FPS and networking foundations are stable.
 
 ## Build
 
-The GitHub Actions macOS workflow builds the native app and packages a DMG using SDL2 and Apple's OpenGL framework. A downloadable installer should only be considered available after the workflow completes successfully and the artifact is verified.
+The GitHub Actions macOS workflow builds the native SDL2 + OpenGL application and packages a DMG. A downloadable installer should only be considered available after the workflow completes successfully and the artifact is verified. Builds are currently unsigned and may show a macOS Gatekeeper warning.
