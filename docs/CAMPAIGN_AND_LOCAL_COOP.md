@@ -2,6 +2,19 @@
 
 This document defines the planned multiplayer and campaign milestones. It does not claim these modes are already implemented.
 
+## First-person campaign presentation
+
+The campaign should feel like a complete first-person 3D adventure, not a menu-driven or top-down game. The player experiences each mission through their own first-person camera.
+
+- First-person movement with walking, running, smooth mouse/controller look, collision, and responsive camera motion.
+- Detailed 3D-feeling environments: streets, interiors, transit spaces, weather, lighting, fog, shadows, ambient effects, and readable landmarks.
+- A restrained in-world HUD for mission name, compass, objectives, teammate status, and interaction prompts.
+- First-person interaction animations for a scanner, flashlight, repair tool, and rescue equipment.
+- Cinematic mission introductions, radio dialogue, environmental storytelling, checkpoint transitions, and a mission-complete sequence.
+- Teammates appear as characters in the environment, with names/status indicators and spatial voice-chat support considered for online play.
+- Missions focus on exploration, navigation, restoring infrastructure, scanning, and rescue. The visual goal is a grounded, cinematic first-person experience without graphic combat.
+- Consistent first-person presentation across solo, local split-screen, and online sessions. Each local player gets their own camera viewport; each online player gets their own full-screen camera.
+
 ## Campaign structure
 
 A continuous campaign with shared mission progression, playable solo or cooperatively:
@@ -43,14 +56,16 @@ Target: 2–8 players joining the same campaign mission over the network.
 ## Required engineering work
 
 1. Replace global player coordinates and angle with a Player array for local players and a network player collection for remote participants.
-2. Add SDL game-controller discovery, hot-plug handling, and per-player input mapping.
-3. Add a viewport renderer for one to four local cameras.
-4. Build a local lobby showing connected controllers and player slots.
-5. Add campaign mission data, unlocks, checkpoints, and save/load.
-6. Expand the current two-peer networking prototype into an eight-player session protocol with server-authoritative state and reconnect handling.
-7. Build online lobby, invite/join flow, session discovery, and secure server hosting.
-8. Test local viewport layouts, eight-client network sessions, disconnects, and mission-state synchronization.
+2. Replace the current ray-casting prototype renderer with a proper 3D scene renderer, asset pipeline, lighting, animation, and first-person camera system.
+3. Add first-person movement, collision, interaction tools, mission HUD, dialogue, and cinematic transitions.
+4. Add SDL game-controller discovery, hot-plug handling, and per-player input mapping.
+5. Add a viewport renderer for one to four local cameras.
+6. Build a local lobby showing connected controllers and player slots.
+7. Add campaign mission data, unlocks, checkpoints, and save/load.
+8. Expand the current two-peer networking prototype into an eight-player session protocol with server-authoritative state and reconnect handling.
+9. Build online lobby, invite/join flow, session discovery, and secure server hosting.
+10. Test local viewport layouts, eight-client network sessions, disconnects, and mission-state synchronization.
 
 ## Current status
 
-The game is currently a one-player ray-casting prototype. The local renderer and input loop have not yet been converted to multi-camera, four-player split-screen. Campaign missions 2–5, save progression, controller lobby, and four-player split-screen are not yet implemented. A basic TCP relay/client prototype exists, but it has not been verified as a working multiplayer session, is not publicly hosted, and is not an eight-player campaign service. Online campaign, eight-player sessions, matchmaking/invites, and secure production hosting remain unimplemented.
+The game is currently a one-player ray-casting prototype, not a full 3D FPS engine. The campaign presentation described above is the target design, not a completed feature. The local renderer and input loop have not yet been converted to multi-camera, four-player split-screen. Campaign missions 2–5, save progression, controller lobby, and four-player split-screen are not yet implemented. A basic TCP relay/client prototype exists, but it has not been verified as a working multiplayer session, is not publicly hosted, and is not an eight-player campaign service. The 3D renderer, campaign presentation, online campaign, eight-player sessions, matchmaking/invites, and secure production hosting remain unimplemented.
