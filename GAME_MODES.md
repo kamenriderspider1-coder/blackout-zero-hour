@@ -1,36 +1,30 @@
 # BLACKOUT: ZERO HOUR — Game Modes Roadmap
 
-This file records the requested mode structure. These are planned features, not claims that they are already implemented in the current prototype.
-
 ## Main menu
-
 - Campaign
 - Multiplayer
 - Options
 - Quit
 
 ## Campaign
-
-A single-player, story-driven rescue and exploration campaign. Missions focus on restoring communications, locating stranded people, navigating hazardous environments, collecting information, and reaching safe extraction points. Progress, mission objectives, and completion status are saved locally.
+A single-player rescue and exploration campaign. Missions focus on restoring communications, locating stranded people, navigating environments, collecting information, and reaching safe extraction points. Mission progression and completion saves are planned.
 
 ## Multiplayer
 
-The Multiplayer menu contains two separate choices:
-
 ### Local Multiplayer
-
-A same-device mode for players sharing one Mac. The intended first implementation is a cooperative split-screen expedition, with each player helping locate signal relays, solve environmental objectives, and reach the safe zone.
+The target is same-device cooperative split-screen on one Mac. It requires a second player controller/input path, two camera viewports, and shared mission state. This is not implemented yet.
 
 ### Online Multiplayer
+The target is two-player cooperative play on separate devices, with room creation/join, synchronized positions and objectives, reconnect handling, and server-authoritative mission progress.
 
-An online cooperative mode for players on separate devices. Planned pieces include room creation, invite/join flow, player readiness, synchronized mission objectives, reconnect handling, and a server-authoritative session so clients agree on mission progress.
+A first backend component now exists at `server/lobby_server.py`: a standard-library Python TCP lobby relay with two-player rooms, join/leave events, state relay, and basic input validation. It is a networking prototype only. The current SDL game client does not yet connect to it, and public internet hosting, encryption, authentication, matchmaking, and anti-abuse protections are not configured.
 
 ## Implementation status
-
-- Current prototype: single-player first-person exploration with three signal relays and a safe-zone objective.
-- Campaign menu and mission progression: planned.
-- Local split-screen multiplayer: planned, not implemented.
-- Online multiplayer and matchmaking/session service: planned, not implemented.
+- Current playable prototype: single-player first-person exploration with three signal relays and a safe-zone objective.
+- Lobby relay server: implemented as a standalone prototype; not yet integrated into the game client.
+- Online multiplayer gameplay: not implemented until the client networking and hosted server are connected.
+- Local split-screen: planned, not implemented.
+- Campaign progression/save system: planned.
 - macOS DMG: packaging workflow added; a successful build and downloadable artifact still need verification.
 
-The game should remain an original, nonviolent rescue/exploration experience. Multiplayer objectives are cooperative navigation, scanning, communication repair, and rescue tasks.
+The game remains an original, nonviolent cooperative rescue/exploration experience. Multiplayer objectives are navigation, scanning, communication repair, and rescue tasks.
