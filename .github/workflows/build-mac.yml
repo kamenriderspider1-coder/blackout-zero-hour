@@ -119,6 +119,8 @@ jobs:
             <string>BLACKOUT: ZERO HOUR</string>
             <key>CFBundlePackageType</key>
             <string>APPL</string>
+            <key>CFBundleIconFile</key>
+            <string>BLACKOUT</string>
             <key>CFBundleVersion</key>
             <string>1.0.0</string>
             <key>CFBundleShortVersionString</key>
@@ -136,6 +138,46 @@ jobs:
           lipo "$EXECUTABLE" -verify_arch "${{ matrix.arch }}"
           lipo "$APP_FRAMEWORKS/libSDL2-2.0.0.dylib" -verify_arch "${{ matrix.arch }}"
           otool -L "$EXECUTABLE"
+
+      - name: Create BLACKOUT app icon
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="dist/BLACKOUT ZERO HOUR.app"
+          ICONSET="$RUNNER_TEMP/BLACKOUT.iconset"
+          mkdir -p "$ICONSET"
+          cat > "$RUNNER_TEMP/make-icon.swift" <<'SWIFT'
+          import AppKit
+          let size = 1024
+          let image = NSImage(size: NSSize(width: size, height: size))
+          image.lockFocus()
+          let bounds = NSRect(x: 0, y: 0, width: size, height: size)
+          let bg = NSBezierPath(roundedRect: bounds.insetBy(dx: 24, dy: 24), xRadius: 190, yRadius: 190)
+          let gradient = NSGradient(colors: [NSColor(calibratedRed: 0.035, green: 0.055, blue: 0.12, alpha: 1), NSColor(calibratedRed: 0.30, green: 0.035, blue: 0.07, alpha: 1)])!
+          gradient.draw(in: bg, angle: -35)
+          let ring = NSBezierPath(ovalIn: NSRect(x: 170, y: 170, width: 684, height: 684))
+          ring.lineWidth = 34
+          NSColor(calibratedRed: 0.95, green: 0.12, blue: 0.16, alpha: 1).setStroke()
+          ring.stroke()
+          let bolt = NSBezierPath()
+          bolt.move(to: NSPoint(x: 570, y: 835)); bolt.line(to: NSPoint(x: 350, y: 520)); bolt.line(to: NSPoint(x: 485, y: 520)); bolt.line(to: NSPoint(x: 430, y: 190)); bolt.line(to: NSPoint(x: 690, y: 555)); bolt.line(to: NSPoint(x: 545, y: 555)); bolt.close()
+          NSColor.white.setFill(); bolt.fill()
+          image.unlockFocus()
+          let tiff = image.tiffRepresentation!
+          let rep = NSBitmapImageRep(data: tiff)!
+          let png = rep.representation(using: .png, properties: [:])!
+          try png.write(to: URL(fileURLWithPath: CommandLine.arguments[1]))
+          SWIFT
+          swift "$RUNNER_TEMP/make-icon.swift" "$RUNNER_TEMP/icon-1024.png"
+          for spec in "16:16" "16:32" "32:32" "32:64" "128:128" "128:256" "256:256" "256:512" "512:512" "512:1024"; do
+            size="${spec%%:*}"; pixels="${spec##*:}"
+            name="icon_${size}x${size}"
+            [[ "$pixels" != "$((size*2))" ]] || name="${name}@2x"
+            sips -z "$pixels" "$pixels" "$RUNNER_TEMP/icon-1024.png" --out "$ICONSET/$name.png" >/dev/null
+          done
+          iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/BLACKOUT.icns"
+          plutil -lint "$APP/Contents/Info.plist"
+          test -s "$APP/Contents/Resources/BLACKOUT.icns"
 
       - name: Create and verify drag-and-drop DMG
         shell: bash
@@ -208,10 +250,12 @@ jobs:
             const section = [
               '## Download for macOS',
               '',
-              'Both installers below were generated and verified by the GitHub Actions release workflow.',
+              'Both installers below were generated and verified by the GitHub Actions release workflow. These builds are not notarized because this project does not have an Apple Developer ID.',
               '',
               '- [Apple Silicon (M1/M2/M3/M4)](https://github.com/' + owner + '/' + repo + '/releases/download/' + tag + '/BLACKOUT-ZERO-HOUR-macOS-arm64.dmg)',
               '- [Intel Mac](https://github.com/' + owner + '/' + repo + '/releases/download/' + tag + '/BLACKOUT-ZERO-HOUR-macOS-x64.dmg)',
+              '',
+              'First launch: macOS may say the app cannot be verified because it is not notarized. Only if you trust this build, open System Settings → Privacy & Security → Open Anyway after the first blocked launch. Do not disable Gatekeeper globally.',
               '',
               'See the [full release notes and files](https://github.com/' + owner + '/' + repo + '/releases/tag/' + tag + ').',
               ''
