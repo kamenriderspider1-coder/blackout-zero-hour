@@ -87,14 +87,14 @@ No real-money purchases are available in the current build. The credits economy 
 
 <blockquote>
 
-**Prototype downloads, not the final game.** The DMGs below are the last published installers. They do not include every change currently on the development branch, and they should not be described as the completed Zero-One FPS. The latest source is available in this repository.
+**Latest published macOS prototype installers.** These DMGs are the current downloads attached to the project's GitHub release. They install the playable prototype; they are not a claim that the full campaign or all planned FPS features are finished.
 
 </blockquote>
 
 - [Apple Silicon (M1/M2/M3/M4) prototype DMG](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/download/v1.0.0/BLACKOUT-ZERO-HOUR-macOS-arm64.dmg)
 - [Intel Mac prototype DMG](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/download/v1.0.0/BLACKOUT-ZERO-HOUR-macOS-x64.dmg)
 
-**Final release policy:** The stable DMGs will be replaced only after the complete game has its combat systems, enemies, campaign, menus, character animation, and successful testing on both Mac architectures. Until then, development builds remain separate from the final release.
+The links above point directly to the current published DMG assets. Check the release page for the latest published build and release notes.
 
 See the [current published prototype release](https://github.com/kamenriderspider1-coder/blackout-zero-hour/releases/tag/v1.0.0).
 <!-- MACOS-DOWNLOADS-END -->
